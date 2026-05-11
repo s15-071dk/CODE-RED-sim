@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CODE RED ER — 救急外来シミュレーション</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;background:#0d1117;color:#f1f5f9;min-height:100vh;}
+
+/* ===== タイトル画面 ===== */
+#title-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,#1a0a0a 0%,#0d1117 70%);padding:24px;}
+.title-logo{font-size:42px;font-weight:800;color:#ef4444;letter-spacing:3px;margin-bottom:6px;text-shadow:0 0 40px rgba(239,68,68,0.4);}
+.title-sub{font-size:13px;color:#475569;margin-bottom:48px;letter-spacing:2px;}
+.stage-list{display:flex;flex-direction:column;gap:10px;width:100%;max-width:420px;}
+.stage-card{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:10px;border:1px solid;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;}
+.stage-card:hover:not(.locked){transform:translateX(6px);box-shadow:0 0 20px rgba(255,255,255,0.05);}
+.stage-card.locked{opacity:0.4;cursor:not-allowed;}
+.stage-card.tutorial{background:#0f2e1a;border-color:#22c55e;}
+.stage-card.s1{background:#1a2744;border-color:#3b82f6;}
+.stage-card.s2{background:#2d1f0a;border-color:#f97316;}
+.stage-card.s3{background:#2d0f0f;border-color:#ef4444;}
+.stage-num{font-size:24px;font-weight:800;width:36px;text-align:center;flex-shrink:0;}
+.stage-info{flex:1;}
+.stage-name{font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:3px;}
+.stage-desc{font-size:11px;color:#64748b;line-height:1.4;}
+.stage-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}
+.stag{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:500;}
+.stag-easy{background:#0f2e1a;color:#22c55e;}
+.stag-med{background:#2d1a0a;color:#f97316;}
+.stag-hard{background:#2d0f0f;color:#ef4444;}
+.stag-info{background:#1e2736;color:#64748b;}
+.lock-icon{font-size:20px;color:#334155;}
+.title-note{margin-top:20px;font-size:10px;color:#334155;}
+
+/* ===== ゲーム画面 ===== */
+#game-screen{display:none;flex-direction:column;height:100vh;}
+.top-bar{background:#111827;border-bottom:1px solid #2d3748;display:flex;align-items:center;gap:8px;padding:6px 14px;height:44px;flex-shrink:0;}
+.top-brand{color:#ef4444;font-size:13px;font-weight:700;white-space:nowrap;margin-right:4px;}
+.top-stat{display:flex;align-items:center;gap:4px;padding:3px 8px;background:#1e2736;border-radius:5px;border:0.5px solid #2d3748;white-space:nowrap;}
+.top-stat .lbl{font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;}
+.top-stat .val{font-size:11px;font-weight:500;color:#f1f5f9;}
+.top-stat .val.red{color:#ef4444;}.top-stat .val.grn{color:#22c55e;}
+.sat-wrap{display:flex;align-items:center;gap:5px;flex:1;max-width:150px;}
+.sat-track{flex:1;height:8px;background:#1e2736;border-radius:4px;overflow:hidden;border:0.5px solid #2d3748;}
+.sat-fill{height:100%;border-radius:4px;transition:width 0.6s,background 0.6s;}
+.sat-pct{font-size:10px;font-weight:500;white-space:nowrap;}
+.shift-wrap{display:flex;align-items:center;gap:5px;}
+.shift-track{width:60px;height:5px;background:#1e2736;border-radius:3px;overflow:hidden;}
+.shift-fill{height:100%;background:#3b82f6;border-radius:3px;transition:width 1s;}
+.shift-time{font-size:10px;color:#60a5fa;font-weight:500;white-space:nowrap;}
+.alert-badge{background:#7f1d1d;color:#fca5a5;font-size:9px;padding:2px 7px;border-radius:4px;border:0.5px solid #ef4444;display:none;white-space:nowrap;}
+.timer-disp{font-size:14px;font-weight:500;color:#f8fafc;letter-spacing:2px;margin-left:auto;}
+.back-btn{font-size:10px;padding:3px 9px;border-radius:4px;border:0.5px solid #2d3748;background:#1e2736;color:#64748b;cursor:pointer;margin-left:8px;}
+.back-btn:hover{color:#94a3b8;}
+.alert-bar{background:#2d0f0f;border-bottom:1px solid #ef4444;padding:3px 14px;font-size:10px;color:#fca5a5;display:none;align-items:center;gap:6px;flex-shrink:0;}
+.alert-bar.show{display:flex;}
+
+.body-wrap{display:flex;flex:1;overflow:hidden;}
+
+/* ===== 左パネル ===== */
+.left-panel{background:#111827;border-right:1px solid #2d3748;display:flex;flex-direction:column;width:170px;flex-shrink:0;}
+.panel-hdr{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;padding:6px 10px 4px;border-bottom:0.5px solid #1e2736;flex-shrink:0;}
+.wait-area{flex:1;overflow-y:auto;}
+.wait-card{margin:5px 5px 0;padding:6px;border-radius:6px;border:0.5px solid;cursor:grab;transition:opacity 0.15s,transform 0.15s;}
+.wait-card:hover{transform:scale(1.02);}
+.wait-card.dragging{opacity:0.35;}
+.wait-card.lv1{background:#2d0f0f;border-color:#ef4444;}
+.wait-card.lv2{background:#2d1f0a;border-color:#f97316;}
+.wait-card.lv3{background:#0f2e1a;border-color:#22c55e;}
+.wait-card.lv4{background:#2a250a;border-color:#eab308;}
+.pt-name{font-size:10px;font-weight:500;color:#f1f5f9;}
+.pt-chief{font-size:9px;color:#94a3b8;margin-top:1px;}
+.pt-vitals{font-size:8px;margin-top:2px;display:flex;gap:2px;flex-wrap:wrap;}
+.vbadge{padding:1px 3px;border-radius:3px;font-size:8px;}
+.vbadge.hr{background:#1e3a5f;color:#93c5fd;}
+.vbadge.bp{background:#1a2e1a;color:#86efac;}
+.vbadge.spo2{background:#2d1b4e;color:#c4b5fd;}
+.drag-hint{font-size:9px;color:#334155;text-align:center;padding:6px;line-height:1.4;}
+
+/* スタッフパネル */
+.staff-panel{border-top:1px solid #2d3748;flex-shrink:0;}
+.staff-panel-hdr{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;padding:5px 10px 4px;display:flex;justify-content:space-between;}
+.staff-item{margin:2px 5px;padding:5px 7px;border-radius:5px;border:0.5px solid #2d3748;background:#1e2736;cursor:pointer;transition:border-color 0.15s;}
+.staff-item:hover{border-color:#60a5fa;}
+.staff-item.on-break{border-color:#f97316;background:#2d1a0a;}
+.staff-item.sel{border-color:#60a5fa;background:#1a2845;}
+.sn-row{display:flex;align-items:center;gap:4px;}
+.sname{font-size:10px;font-weight:600;color:#f1f5f9;flex:1;}
+.rbadge{font-size:8px;padding:1px 5px;border-radius:3px;white-space:nowrap;font-weight:500;}
+.rb-hn{background:#1e3a5f;color:#7dd3fc;}
+.rb-ns{background:#1e3a5f;color:#93c5fd;}
+.rb-d2{background:#2d1b4e;color:#c4b5fd;}
+.rb-d1{background:#3b1f6b;color:#ddd6fe;}
+.ss-row{font-size:8px;color:#475569;margin-top:2px;display:flex;align-items:center;gap:4px;}
+.ft{flex:1;height:4px;background:#111827;border-radius:2px;overflow:hidden;}
+.ff{height:100%;border-radius:2px;transition:width 0.5s;}
+
+/* ===== ERエリア ===== */
+.er-area{background:#151c2b;width:355px;flex-shrink:0;padding:9px 11px;display:flex;flex-direction:column;gap:7px;overflow:hidden;position:relative;}
+.zone-lbl{font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;}
+.beds-row{display:flex;gap:8px;}
+.beds-row-exam{display:flex;gap:6px;}
+.bed-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;position:relative;}
+.bed-wrap.drop-target .drop-ring{display:block!important;}
+.bed-wrap.drop-blocked .drop-ring-blocked{display:block!important;}
+.drop-ring{display:none;position:absolute;top:-3px;left:-3px;right:-3px;bottom:16px;border-radius:9px;border:2px dashed #60a5fa;pointer-events:none;}
+.drop-ring-blocked{display:none;position:absolute;top:-3px;left:-3px;right:-3px;bottom:16px;border-radius:9px;border:2px dashed #ef4444;pointer-events:none;}
+.z-div{height:0.5px;background:#1e2736;}
+
+/* ===== 右パネル ===== */
+.right-panel{background:#111827;border-left:1px solid #2d3748;display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0;}
+.right-panel.collapsed .rp-hdr-lbl,.right-panel.collapsed .rp-body{display:none;}
+.rp-hdr{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;padding:6px 10px 4px;border-bottom:0.5px solid #1e2736;display:flex;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;}
+.rp-hdr:hover{background:#151c2b;}
+.rp-hdr-lbl{flex:1;}
+.rp-toggle{color:#475569;font-size:13px;transition:transform 0.2s;}
+.right-panel.collapsed .rp-toggle{transform:rotate(180deg);}
+.col-tab{display:none;font-size:9px;color:#334155;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:0.5px;padding:8px 0;cursor:pointer;text-align:center;}
+.right-panel.collapsed .col-tab{display:block;}
+.rp-body{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+
+/* 右パネル内容 */
+.det-sec{padding:7px 10px;border-bottom:0.5px solid #1e2736;}
+.det-name{font-size:12px;font-weight:500;color:#f1f5f9;}
+.det-age{font-size:10px;color:#64748b;margin-top:1px;}
+.chief-badge{margin-top:4px;font-size:10px;padding:3px 6px;border-radius:4px;display:inline-block;}
+.vgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-top:6px;}
+.vbox{background:#1e2736;border-radius:4px;padding:4px 6px;border:0.5px solid #2d3748;}
+.vbox.w{border-color:#ef4444;animation:vw 1.5s infinite;}
+@keyframes vw{0%,100%{box-shadow:none;}50%{box-shadow:0 0 0 3px rgba(239,68,68,0.2);}}
+.vlbl{font-size:7px;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;}
+.vval{font-size:11px;font-weight:500;color:#f1f5f9;margin-top:1px;}
+.vval.ab{color:#ef4444;}
+.vunit{font-size:7px;color:#475569;}
+
+/* スタッフ配置 */
+.sa-sec{padding:6px 10px;border-bottom:0.5px solid #1e2736;}
+.sa-title{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;}
+.sa-list{display:flex;flex-direction:column;gap:3px;}
+.sa-row{display:flex;align-items:center;gap:5px;padding:4px 7px;border-radius:5px;border:0.5px solid #2d3748;background:#1e2736;}
+.sa-name{font-size:10px;color:#e2e8f0;flex:1;display:flex;align-items:center;gap:4px;}
+.btn-rm{padding:2px 6px;border-radius:4px;border:0.5px solid #475569;background:transparent;color:#64748b;font-size:9px;cursor:pointer;flex-shrink:0;}
+.btn-rm:hover{border-color:#ef4444;color:#ef4444;}
+.sa-add-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;}
+.btn-asgn{padding:3px 7px;border-radius:4px;border:0.5px solid #2d3748;background:#1e2736;color:#f1f5f9;font-size:9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.3;}
+.btn-asgn:hover{border-color:#60a5fa;}
+.btn-asgn .ban{font-size:10px;font-weight:600;}
+.btn-asgn .bar{font-size:7px;opacity:0.7;}
+
+/* オーダーボタン — 文字色を白に */
+.ord-sec{padding:6px 10px;border-bottom:0.5px solid #1e2736;}
+.ord-sec-title{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;}
+.ord-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.obtn{
+  padding:7px 4px;border-radius:6px;border:1px solid #4a5568;background:#252e3f;
+  color:#ffffff;font-size:10px;cursor:pointer;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  line-height:1.3;font-weight:500;transition:border-color 0.12s,background 0.12s;
+}
+.obtn i{font-size:14px;color:#93c5fd;}
+.obtn:hover:not([disabled]){border-color:#60a5fa;background:#1a3554;color:#fff;}
+.obtn[disabled]{cursor:not-allowed;}
+.obtn.pending{border-color:#f97316;background:#2d1a0a;color:#fdba74;}
+.obtn.pending i{color:#fb923c;}
+.obtn.sig-red{border-color:#ef4444;background:#2d0f0f;color:#fca5a5;}
+.obtn.sig-red i{color:#ef4444;}
+.obtn.sig-yellow{border-color:#eab308;background:#2a250a;color:#fde68a;}
+.obtn.sig-yellow i{color:#eab308;}
+.obtn.sig-green{border-color:#22c55e;background:#0f2e1a;color:#86efac;}
+.obtn.sig-green i{color:#22c55e;}
+
+/* 結果サマリー */
+.sig-bar{padding:6px 10px;border-bottom:0.5px solid #1e2736;}
+.sig-bar-title{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;}
+.sig-list{display:flex;flex-direction:column;gap:3px;}
+.sig-row{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:5px;background:#1e2736;border:0.5px solid #2d3748;}
+.sig-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.sig-name{font-size:10px;color:#e2e8f0;flex:1;font-weight:500;}
+.sig-res{font-size:10px;font-weight:600;}
+.sig-row.red-row{border-color:#ef4444;background:#2d0f0f;}
+.sig-row.yellow-row{border-color:#eab308;background:#2a250a;}
+.sig-row.green-row{border-color:#22c55e;background:#0f2e1a;}
+
+/* 転帰 */
+.disp-sec{padding:6px 10px;border-bottom:0.5px solid #1e2736;}
+.disp-sec-title{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;}
+.disp-opts{display:flex;flex-direction:column;gap:4px;}
+.disp-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;border:0.5px solid #2d3748;background:#1e2736;cursor:pointer;font-size:11px;font-weight:500;transition:border-color 0.1s;}
+.disp-btn:hover:not([disabled]){border-color:#60a5fa;background:#1a2845;}
+.disp-btn[disabled]{opacity:0.4;cursor:not-allowed;}
+.disp-btn.rec{border-width:1.5px;animation:dp 1.5s infinite;}
+@keyframes dp{0%,100%{opacity:1;}50%{opacity:0.75;}}
+.disp-btn.rec.icu{border-color:#ef4444;background:#2d0f0f;}
+.disp-btn.rec.admit{border-color:#60a5fa;background:#1e3a5f;}
+.disp-btn.rec.discharge{border-color:#22c55e;background:#0f2e1a;}
+.rec-badge{font-size:8px;padding:1px 6px;border-radius:10px;margin-left:auto;font-weight:600;}
+.disp-done{margin:4px 10px;padding:4px 7px;background:#0f2e1a;border:0.5px solid #22c55e;border-radius:5px;font-size:9px;color:#86efac;display:flex;align-items:center;gap:4px;}
+.no-sel{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:8px;color:#334155;font-size:11px;padding:20px;text-align:center;}
+.no-sel i{font-size:24px;}
+
+/* トースト */
+.toast{background:#1e2736;border:0.5px solid #22c55e;border-radius:5px;padding:4px 10px;font-size:10px;color:#86efac;margin:2px 8px;display:none;flex-shrink:0;}
+.toast.show{display:block;}
+.toast.warn{border-color:#f97316;color:#fdba74;}
+.toast.err{border-color:#ef4444;color:#fca5a5;}
+.afl{position:absolute;inset:-4px;border-radius:10px;background:rgba(34,197,94,0.28);pointer-events:none;animation:afl 0.7s ease-out forwards;}
+@keyframes afl{0%{opacity:1;}100%{opacity:0;}}
+
+/* スタッフポップオーバー */
+.spop{position:absolute;bottom:10px;left:159px;width:200px;background:#111827;border:1px solid #3b82f6;border-radius:8px;padding:10px;z-index:50;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+.spop-close{position:absolute;top:6px;right:8px;background:none;border:none;color:#475569;font-size:13px;cursor:pointer;}
+.spop-name{font-size:12px;font-weight:700;color:#f1f5f9;margin-bottom:1px;}
+.spop-role{font-size:10px;color:#94a3b8;margin-bottom:6px;}
+.spop-trait{font-size:9px;color:#64748b;padding:4px 6px;background:#1e2736;border-radius:4px;margin-bottom:8px;line-height:1.5;}
+.spop-ft-lbl{display:flex;justify-content:space-between;font-size:9px;color:#64748b;margin-bottom:3px;}
+.spop-ft-track{height:8px;background:#1e2736;border-radius:4px;overflow:hidden;border:0.5px solid #2d3748;margin-bottom:8px;}
+.spop-ft-fill{height:100%;border-radius:4px;transition:width 0.5s;}
+.spop-status{font-size:10px;padding:4px 7px;border-radius:4px;margin-bottom:8px;line-height:1.4;}
+.spop-btn{width:100%;padding:6px;border-radius:6px;border:none;font-size:10px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+.spop-break{background:#f97316;color:#fff;}.spop-break:hover{background:#ea6c00;}
+.spop-work{background:#22c55e;color:#fff;}.spop-work:hover{background:#16a34a;}
+
+/* 入電モーダル */
+.call-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);}
+.call-overlay.active{display:flex;}
+.call-modal{background:#111827;border:2px solid #ef4444;border-radius:14px;width:340px;overflow:hidden;box-shadow:0 0 60px rgba(239,68,68,0.4);animation:su 0.25s ease;}
+@keyframes su{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.call-hdr{background:linear-gradient(135deg,#7f1d1d,#991b1b);padding:12px 16px;display:flex;align-items:center;gap:10px;}
+.call-ring{width:36px;height:36px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;animation:rg 0.5s infinite alternate;flex-shrink:0;}
+@keyframes rg{from{transform:rotate(-15deg);}to{transform:rotate(15deg);}}
+.call-body{padding:14px 16px;}
+.call-row{display:flex;justify-content:space-between;margin-bottom:6px;}
+.call-key{font-size:10px;color:#64748b;white-space:nowrap;margin-right:8px;}
+.call-val{font-size:11px;color:#f1f5f9;text-align:right;line-height:1.4;}
+.call-val.red{color:#ef4444;font-weight:600;}
+.call-val.orange{color:#f97316;font-weight:600;}
+.call-div{height:0.5px;background:#2d3748;margin:6px 0;}
+.call-eta-box{display:flex;align-items:center;gap:10px;background:#1e2736;border-radius:8px;padding:8px 12px;margin-top:6px;border:0.5px solid #374151;}
+.call-eta-val{font-size:26px;font-weight:700;color:#f97316;}
+.call-eta-unit{font-size:10px;color:#64748b;margin-top:2px;}
+.call-eta-dist{margin-left:auto;font-size:10px;color:#475569;text-align:right;}
+.call-acts{display:flex;gap:8px;padding:0 16px 16px;}
+.btn-accept{flex:1;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-accept:hover{transform:scale(1.02);}
+.btn-decline{flex:1;padding:10px;border-radius:8px;border:1px solid #2d3748;background:#1e2736;color:#94a3b8;font-size:12px;cursor:pointer;}
+.btn-decline:hover{border-color:#ef4444;color:#fca5a5;}
+
+/* disposition確認 */
+.disp-modal-bg{background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;}
+.disp-modal-bg.show{display:flex;}
+.disp-modal{background:#111827;border:0.5px solid #2d3748;border-radius:10px;width:250px;overflow:hidden;}
+.dm-hdr{padding:9px 12px;border-bottom:0.5px solid #1e2736;font-size:11px;font-weight:500;color:#f1f5f9;}
+.dm-opts{padding:7px;}
+.dm-opt{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:6px;border:0.5px solid #2d3748;background:#1e2736;margin-bottom:4px;cursor:pointer;}
+.dm-opt:hover{border-color:#60a5fa;}
+.dm-opt i{font-size:15px;}
+.dm-opt-label{font-size:11px;font-weight:500;color:#f1f5f9;}
+.dm-opt-sub{font-size:9px;color:#64748b;margin-top:1px;}
+.dm-opt.admit i,.dm-opt.admit .dm-opt-label{color:#60a5fa;}.dm-opt.admit{border-color:#1d4ed8;}
+.dm-opt.icu i,.dm-opt.icu .dm-opt-label{color:#ef4444;}.dm-opt.icu{border-color:#7f1d1d;}
+.dm-opt.discharge i,.dm-opt.discharge .dm-opt-label{color:#22c55e;}.dm-opt.discharge{border-color:#166634;}
+
+/* チュートリアルナビ */
+.tut-nav{background:linear-gradient(135deg,#0f2e1a,#0c2318);border-top:2px solid #22c55e;padding:11px 14px;display:none;align-items:flex-start;gap:10px;flex-shrink:0;}
+.tut-nav.show{display:flex;}
+.tut-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.tut-content{flex:1;}
+.tut-step{font-size:9px;color:#22c55e;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+.tut-text{font-size:11px;color:#e2e8f0;line-height:1.6;}
+.tut-hint{font-size:9px;color:#64748b;margin-top:3px;}
+.tut-acts{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0;}
+.tut-next{font-size:10px;padding:5px 12px;border-radius:5px;border:none;background:#22c55e;color:#fff;cursor:pointer;font-weight:600;}
+.tut-next:hover{background:#16a34a;}
+.tut-next:disabled{background:#1e2736;color:#334155;cursor:not-allowed;}
+.tut-skip{font-size:9px;color:#334155;background:none;border:none;cursor:pointer;padding:2px 4px;}
+.tut-skip:hover{color:#475569;}
+
+/* スポットライト */
+.spotlight{position:absolute;inset:0;pointer-events:none;z-index:90;}
+.sp-ring{position:absolute;border:3px solid #22c55e;border-radius:10px;box-shadow:0 0 0 2000px rgba(0,0,0,0.5);transition:all 0.4s ease;pointer-events:none;display:none;}
+
+/* 終了画面 */
+.end-screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(6px);}
+.end-screen.show{display:flex;}
+.end-screen.go{background:rgba(15,5,5,0.9);}
+.end-screen.cl{background:rgba(5,15,10,0.9);}
+.end-card{border-radius:16px;width:340px;overflow:hidden;text-align:center;}
+.end-card.go{background:#111827;border:2px solid #ef4444;box-shadow:0 0 40px rgba(239,68,68,0.3);}
+.end-card.cl{background:#111827;border:2px solid #22c55e;box-shadow:0 0 40px rgba(34,197,94,0.3);}
+.end-hdr{padding:18px 16px 10px;}
+.end-icon{font-size:38px;margin-bottom:6px;}
+.end-title{font-size:22px;font-weight:800;margin-bottom:3px;}
+.end-card.go .end-title{color:#ef4444;}
+.end-card.cl .end-title{color:#22c55e;}
+.end-sub{font-size:11px;color:#64748b;}
+.end-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:0.5px solid #1e2736;border-bottom:0.5px solid #1e2736;}
+.end-stat{padding:10px 6px;border-right:0.5px solid #1e2736;}
+.end-stat:last-child{border-right:none;}
+.end-stat-val{font-size:18px;font-weight:700;color:#f1f5f9;}
+.end-stat-lbl{font-size:8px;color:#64748b;margin-top:2px;text-transform:uppercase;}
+.end-grade{padding:12px 16px;}
+.gbadge{display:inline-block;font-size:26px;font-weight:700;padding:3px 14px;border-radius:7px;margin-bottom:6px;}
+.gS{background:#1c1408;color:#fbbf24;border:1px solid #854d0e;}
+.gA{background:#0f2e1a;color:#22c55e;border:1px solid #166534;}
+.gB{background:#1e3a5f;color:#60a5fa;border:1px solid #1d4ed8;}
+.gC{background:#2d1a0a;color:#f97316;border:1px solid #854d0e;}
+.gD{background:#2d0f0f;color:#ef4444;border:1px solid #7f1d1d;}
+.gcomment{font-size:10px;color:#94a3b8;line-height:1.5;}
+.end-btns{display:flex;gap:8px;padding:0 16px 16px;}
+.btn-retry{flex:1;padding:9px;border-radius:7px;border:1px solid #2d3748;background:#1e2736;color:#94a3b8;font-size:11px;cursor:pointer;}
+.btn-next{flex:1;padding:9px;border-radius:7px;border:none;background:#22c55e;color:#fff;font-size:11px;font-weight:700;cursor:pointer;}
+.btn-go-retry{flex:1;padding:9px;border-radius:7px;border:none;background:#ef4444;color:#fff;font-size:11px;font-weight:700;cursor:pointer;}
+
+.ghost-card{position:fixed;pointer-events:none;z-index:9999;padding:5px 9px;border-radius:6px;border:1.5px solid;font-size:10px;font-weight:500;color:#f1f5f9;opacity:0.92;display:none;}
+</style>
+</head>
+<body>
+
+<!-- タイトル画面 -->
+<div id="title-screen">
+  <div class="title-logo">🚨 CODE RED ER</div>
+  <div class="title-sub">救急外来シミュレーション</div>
+  <div class="stage-list">
+    <div class="stage-card tutorial" onclick="startStage('tutorial')">
+      <div class="stage-num" style="color:#22c55e;">0</div>
+      <div class="stage-info">
+        <div class="stage-name">チュートリアル — 最初の一歩</div>
+        <div class="stage-desc">操作を学ぶ。患者1名・時間制限なし</div>
+        <div class="stage-tags"><span class="stag stag-easy">難易度 ★☆☆</span><span class="stag stag-info">患者 1名</span><span class="stag stag-info">時間制限なし</span></div>
+      </div>
+      <div><div style="font-size:20px;font-weight:800;color:#22c55e;" id="grade-tut">—</div></div>
+    </div>
+    <div class="stage-card s1" id="card-s1" onclick="tryStage('stage1')">
+      <div class="stage-num" style="color:#60a5fa;">1</div>
+      <div class="stage-info">
+        <div class="stage-name">初日のシフト</div>
+        <div class="stage-desc">軽症中心。オーダーとdispositionの練習</div>
+        <div class="stage-tags"><span class="stag stag-easy">難易度 ★☆☆</span><span class="stag stag-info">患者 3名</span><span class="stag stag-info">入電なし</span></div>
+      </div>
+      <div id="right-s1"><div class="lock-icon">🔒</div></div>
+    </div>
+    <div class="stage-card s2 locked">
+      <div class="stage-num" style="color:#f97316;">2</div>
+      <div class="stage-info">
+        <div class="stage-name">救急の基本</div>
+        <div class="stage-desc">重症患者が登場。入電あり</div>
+        <div class="stage-tags"><span class="stag stag-med">難易度 ★★☆</span><span class="stag stag-info">患者 4名</span><span class="stag stag-info">入電あり</span></div>
+      </div>
+      <div><div class="lock-icon">🔒</div></div>
+    </div>
+    <div class="stage-card s3 locked">
+      <div class="stage-num" style="color:#ef4444;">3</div>
+      <div class="stage-info">
+        <div class="stage-name">スタッフ管理</div>
+        <div class="stage-desc">疲労システム有効。休憩判断が鍵</div>
+        <div class="stage-tags"><span class="stag stag-hard">難易度 ★★★</span><span class="stag stag-info">患者 5名</span><span class="stag stag-info">疲労あり</span></div>
+      </div>
+      <div><div class="lock-icon">🔒</div></div>
+    </div>
+  </div>
+  <div class="title-note">チュートリアルをクリアするとステージ1が解放されます</div>
+</div>
+
+<!-- ゲーム画面 -->
+<div id="game-screen">
+  <div class="alert-bar" id="alert-bar"><i class="ti ti-alert-triangle"></i><span id="alert-msg"></span></div>
+  <div class="top-bar">
+    <span class="top-brand">🚨 CODE RED ER</span>
+    <div class="top-stat"><span class="lbl">ステージ</span><span class="val" id="stage-lbl">Tutorial</span></div>
+    <div class="top-stat"><span class="lbl">重症</span><span class="val" id="stat-c">0/3</span></div>
+    <div class="top-stat"><span class="lbl">診察室</span><span class="val" id="stat-e">0/5</span></div>
+    <div class="top-stat"><span class="lbl">得点</span><span class="val grn" id="score-disp">0</span></div>
+    <div class="top-stat"><span class="lbl">転帰</span><span class="val grn" id="disp-count">0</span></div>
+    <div class="sat-wrap">
+      <span style="font-size:9px;color:#94a3b8;">😊</span>
+      <div class="sat-track"><div class="sat-fill" id="sat-fill" style="width:100%;background:#22c55e;"></div></div>
+      <span class="sat-pct" id="sat-pct" style="color:#22c55e;">100%</span>
+    </div>
+    <div class="shift-wrap" id="shift-wrap" style="display:none;">
+      <span style="font-size:9px;color:#64748b;">⏱</span>
+      <div class="shift-track"><div class="shift-fill" id="shift-fill" style="width:100%;"></div></div>
+      <span class="shift-time" id="shift-time">4:00</span>
+    </div>
+    <span class="alert-badge" id="top-alert"><i class="ti ti-alert-triangle"></i> 入電中</span>
+    <span class="timer-disp" id="clock">08:00</span>
+    <button class="back-btn" onclick="backToTitle()">← タイトル</button>
+  </div>
+
+  <div class="body-wrap">
+    <div class="left-panel">
+      <div class="panel-hdr">待機患者 <span style="color:#ef4444;" id="wait-count">0</span></div>
+      <div class="wait-area">
+        <div id="wait-list"></div>
+        <div class="drag-hint" id="drag-hint" style="display:none;"><i class="ti ti-drag-drop" style="font-size:13px;display:block;margin-bottom:2px;"></i>空きベッドへドラッグ</div>
+      </div>
+      <div class="staff-panel" id="staff-panel" style="display:none;">
+        <div class="staff-panel-hdr"><span>スタッフ</span><span style="font-size:8px;color:#475569;">クリックで操作</span></div>
+        <div id="staff-list"></div>
+      </div>
+    </div>
+
+    <div class="er-area" id="er-area">
+      <div>
+        <div class="zone-lbl"><i class="ti ti-alert-triangle" style="color:#ef4444;font-size:9px;margin-right:3px;"></i>重症ベッド（3床）</div>
+        <div class="beds-row" id="critical-beds"></div>
+      </div>
+      <div class="z-div"></div>
+      <div>
+        <div class="zone-lbl"><i class="ti ti-stethoscope" style="color:#60a5fa;font-size:9px;margin-right:3px;"></i>診察室（5室）</div>
+        <div class="beds-row-exam" id="exam-beds"></div>
+      </div>
+      <div class="spotlight" id="spotlight"><div class="sp-ring" id="sp-ring"></div></div>
+      <div class="spop" id="spop" style="display:none;">
+        <button class="spop-close" onclick="closeSpop()">✕</button>
+        <div class="spop-name" id="spop-name"></div>
+        <div class="spop-role" id="spop-role"></div>
+        <div class="spop-trait" id="spop-trait"></div>
+        <div class="spop-ft-lbl"><span>疲労度</span><span id="spop-pct"></span></div>
+        <div class="spop-ft-track"><div class="spop-ft-fill" id="spop-fill"></div></div>
+        <div class="spop-status" id="spop-status"></div>
+        <button class="spop-btn" id="spop-btn"></button>
+      </div>
+    </div>
+
+    <div class="right-panel" id="right-panel">
+      <div class="rp-hdr" onclick="togglePanel()">
+        <span class="rp-hdr-lbl" id="rp-title">患者詳細</span>
+        <i class="rp-toggle ti ti-chevron-right"></i>
+      </div>
+      <div class="rp-body" id="rp-body">
+        <div class="no-sel"><i class="ti ti-user-search"></i>ベッドを選択するか<br>患者を割り当ててください</div>
+      </div>
+      <div class="col-tab" onclick="togglePanel()">患者詳細</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="tut-nav" id="tut-nav">
+    <div class="tut-icon" id="tut-icon">💡</div>
+    <div class="tut-content">
+      <div class="tut-step" id="tut-step"></div>
+      <div class="tut-text" id="tut-text"></div>
+      <div class="tut-hint" id="tut-hint"></div>
+    </div>
+    <div class="tut-acts">
+      <button class="tut-next" id="tut-next" onclick="nextTutStep()">次へ →</button>
+      <button class="tut-skip" onclick="skipTut()">スキップ</button>
+    </div>
+  </div>
+
+  <div class="end-screen go" id="screen-go">
+    <div class="end-card go">
+      <div class="end-hdr"><div class="end-icon">💀</div><div class="end-title">GAME OVER</div><div class="end-sub">患者満足度がゼロになりました</div></div>
+      <div class="end-stats">
+        <div class="end-stat"><div class="end-stat-val" id="go-score">0</div><div class="end-stat-lbl">得点</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="go-disp">0</div><div class="end-stat-lbl">転帰数</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="go-time">0:00</div><div class="end-stat-lbl">経過時間</div></div>
+      </div>
+      <div class="end-grade"><div class="gbadge gD" id="go-grade">D</div><div class="gcomment" id="go-comment"></div></div>
+      <div class="end-btns"><button class="btn-go-retry" onclick="location.reload()">もう一度</button><button class="btn-retry" onclick="backToTitle()">タイトルへ</button></div>
+    </div>
+  </div>
+  <div class="end-screen cl" id="screen-cl">
+    <div class="end-card cl">
+      <div class="end-hdr"><div class="end-icon">🏥</div><div class="end-title" id="cl-title">クリア！</div><div class="end-sub" id="cl-sub"></div></div>
+      <div class="end-stats">
+        <div class="end-stat"><div class="end-stat-val" id="cl-score">0</div><div class="end-stat-lbl">得点</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="cl-disp">0</div><div class="end-stat-lbl">転帰数</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="cl-sat">100%</div><div class="end-stat-lbl">最終満足度</div></div>
+      </div>
+      <div class="end-grade"><div class="gbadge gA" id="cl-grade">A</div><div class="gcomment" id="cl-comment"></div></div>
+      <div class="end-btns"><button class="btn-retry" onclick="backToTitle()">タイトルへ</button><button class="btn-next" id="btn-next-stage" onclick="backToTitle()">次のステージへ</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 入電モーダル -->
+<div class="call-overlay" id="call-overlay">
+  <div class="call-modal">
+    <div class="call-hdr">
+      <div class="call-ring"><i class="ti ti-phone" style="color:#fff;font-size:16px;"></i></div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#fca5a5;" id="call-unit">救急隊より入電</div>
+        <div style="font-size:11px;color:#fca5a5;opacity:0.7;" id="call-station"></div>
+      </div>
+    </div>
+    <div class="call-body">
+      <div class="call-row"><span class="call-key">患者</span><span class="call-val" id="c-patient"></span></div>
+      <div class="call-row"><span class="call-key">主訴</span><span class="call-val red" id="c-chief"></span></div>
+      <div class="call-row"><span class="call-key">バイタル</span><span class="call-val" id="c-vitals"></span></div>
+      <div class="call-div"></div>
+      <div class="call-row"><span class="call-key">緊急度</span><span class="call-val" id="c-triage"></span></div>
+      <div class="call-row"><span class="call-key">現場</span><span class="call-val" id="c-scene"></span></div>
+      <div class="call-eta-box">
+        <i class="ti ti-ambulance" style="color:#f97316;font-size:22px;flex-shrink:0;"></i>
+        <div><div class="call-eta-val" id="c-eta">—</div><div class="call-eta-unit">分後に到着予定</div></div>
+        <div class="call-eta-dist" id="c-dist"></div>
+      </div>
+    </div>
+    <div class="call-acts">
+      <button class="btn-decline" onclick="declineCall()">受け入れ不可</button>
+      <button class="btn-accept" onclick="acceptCall()">🚑 受け入れ承諾</button>
+    </div>
+  </div>
+</div>
+
+<!-- Disposition確認モーダル -->
+<div class="disp-modal-bg" id="disp-modal-bg">
+  <div class="disp-modal">
+    <div class="dm-hdr" id="dm-title">転帰を決定してください</div>
+    <div class="dm-opts">
+      <div class="dm-opt icu" onclick="applyDisp('icu')"><i class="ti ti-heart-rate-monitor"></i><div><div class="dm-opt-label">ICU 転送</div><div class="dm-opt-sub">集中管理が必要</div></div></div>
+      <div class="dm-opt admit" onclick="applyDisp('admit')"><i class="ti ti-building-hospital"></i><div><div class="dm-opt-label">一般病棟 入院</div><div class="dm-opt-sub">経過観察が必要</div></div></div>
+      <div class="dm-opt discharge" onclick="applyDisp('discharge')"><i class="ti ti-home"></i><div><div class="dm-opt-label">帰宅</div><div class="dm-opt-sub">外来フォロー可能</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="ghost-card" id="ghost"></div>
+
+<script>
+// ===== 定数 =====
+const COLORS={
+  red:   {frame:"#ef4444",mattress:"#7f1d1d",blanket:"#991b1b",pillow:"#6b1414",glow:"rgba(239,68,68,0.18)"},
+  orange:{frame:"#f97316",mattress:"#7c2d12",blanket:"#9a3412",pillow:"#78280f",glow:"rgba(249,115,22,0.15)"},
+  yellow:{frame:"#eab308",mattress:"#713f12",blanket:"#854d0e",pillow:"#6b3d0b",glow:"rgba(234,179,8,0.13)"},
+  green: {frame:"#22c55e",mattress:"#14532d",blanket:"#166534",pillow:"#134e29",glow:"rgba(34,197,94,0.13)"},
+  empty: {frame:"#2d3748",mattress:"#1e2736",blanket:"#243044",pillow:"#1a2234",glow:"rgba(0,0,0,0)"},
+};
+const TRIAGE_BG= {red:"#2d0f0f",orange:"#2d1f0a",yellow:"#2a250a",green:"#0f2e1a"};
+const TRIAGE_BDR={red:"#ef4444",orange:"#f97316",yellow:"#eab308",green:"#22c55e"};
+const TRIAGE_LV= {red:"lv1",orange:"lv2",yellow:"lv4",green:"lv3"};
+
+const ORDERS=[
+  {id:"iv",   label:"点滴",    icon:"ti-droplet",            time:5},
+  {id:"blood",label:"血液検査",icon:"ti-test-pipe",          time:15},
+  {id:"ecg",  label:"心電図",  icon:"ti-heart-rate-monitor", time:6},
+  {id:"echo", label:"エコー",  icon:"ti-wave-saw-tool",      time:12},
+  {id:"xray", label:"X線",    icon:"ti-scan",               time:10},
+  {id:"ct",   label:"CT",     icon:"ti-circle-dotted",      time:20},
+];
+
+const DISEASE_SIG={
+  acs:   {blood:{color:"red",text:"🔴 Troponin↑↑ 異常"},ecg:{color:"red",text:"🔴 ST上昇 — MI疑い"},echo:{color:"red",text:"🔴 EF低下・壁運動異常"},xray:{color:"green",text:"🟢 肺野清明"},ct:{color:"yellow",text:"🟡 解離は除外"},rec:"icu"},
+  stroke:{blood:{color:"yellow",text:"🟡 凝固系 要確認"},ecg:{color:"yellow",text:"🟡 AF疑い"},echo:{color:"yellow",text:"🟡 心原性塞栓 要評価"},xray:{color:"green",text:"🟢 異常なし"},ct:{color:"red",text:"🔴 頭蓋内出血あり"},rec:"icu"},
+  fever: {blood:{color:"yellow",text:"🟡 WBC軽度上昇"},ecg:{color:"green",text:"🟢 正常洞調律"},echo:{color:"green",text:"🟢 心機能正常"},xray:{color:"green",text:"🟢 両肺野清明"},ct:{color:"green",text:"🟢 異常なし"},rec:"discharge"},
+  abdo:  {blood:{color:"red",text:"🔴 炎症反応高値"},ecg:{color:"green",text:"🟢 正常"},echo:{color:"red",text:"🔴 腹水・炎症所見"},xray:{color:"yellow",text:"🟡 イレウス疑い"},ct:{color:"red",text:"🔴 腹膜炎所見"},rec:"admit"},
+  bp:    {blood:{color:"yellow",text:"🟡 電解質 軽度異常"},ecg:{color:"yellow",text:"🟡 左室肥大パターン"},echo:{color:"yellow",text:"🟡 軽度壁肥厚"},xray:{color:"green",text:"🟢 異常なし"},ct:{color:"green",text:"🟢 頭蓋内異常なし"},rec:"admit"},
+};
+
+const SIG_COLORS={
+  red:   {border:"#ef4444",text:"#fca5a5",dot:"#ef4444",rowClass:"red-row"},
+  yellow:{border:"#eab308",text:"#fde68a",dot:"#eab308",rowClass:"yellow-row"},
+  green: {border:"#22c55e",text:"#86efac",dot:"#22c55e",rowClass:"green-row"},
+};
+
+const STAFF_DEFS=[
+  {id:"n1",name:"青木 沙耶",  short:"青木", role:"nurse",  roleLabel:"看護師（チーフ）",roleShort:"Ns チーフ",rbCls:"rb-hn",fatigueRate:0.65,recoveryRate:1.1, trait:"重症患者に強い。疲れにくい"},
+  {id:"n2",name:"林 美咲",    short:"林",   role:"nurse",  roleLabel:"看護師",          roleShort:"Ns",       rbCls:"rb-ns",fatigueRate:1.0, recoveryRate:1.6, trait:"複数対応が得意。回復が速い"},
+  {id:"n3",name:"中川 遥",    short:"中川", role:"nurse",  roleLabel:"看護師",          roleShort:"Ns",       rbCls:"rb-ns",fatigueRate:1.4, recoveryRate:1.0, trait:"検査サポートが速い。疲れやすい"},
+  {id:"d1",name:"松本 拓海",  short:"松本", role:"doctor", roleLabel:"研修医 2年目",   roleShort:"Dr 2年目", rbCls:"rb-d2",fatigueRate:1.0, recoveryRate:1.0, trait:"バランス型。安定した対応"},
+  {id:"d2",name:"小野 結衣",  short:"小野", role:"doctor", roleLabel:"研修医 1年目",   roleShort:"Dr 1年目", rbCls:"rb-d1",fatigueRate:1.5, recoveryRate:0.7, trait:"処置が速いがミスしやすい"},
+];
+
+function fatigueState(f){
+  if(f<40) return{label:"元気",     icon:"🟢",color:"#22c55e",speedMult:1.0,incidentChance:0};
+  if(f<70) return{label:"疲労気味", icon:"🟡",color:"#eab308",speedMult:0.8,incidentChance:0};
+  if(f<90) return{label:"疲弊",     icon:"🟠",color:"#f97316",speedMult:0.6,incidentChance:0.05};
+  return        {label:"限界",      icon:"🔴",color:"#ef4444",speedMult:0.4,incidentChance:0.15};
+}
+
+const TUT_STEPS=[
+  {id:"welcome",   icon:"🏥",step:"ようこそ",            text:"CODE RED ERへようこそ！\nあなたは救急外来の担当医です。患者を処置してdispositionを決定しましょう。",      hint:"",                                    nextLabel:"はじめる",waitFor:null},
+  {id:"drag",      icon:"👤",step:"STEP 1/5 — 患者割り当て",text:"左パネルの患者カードをドラッグして、空きベッドへ割り当ててください。",                               hint:"💡 カードをつかんでベッドの上でドロップ",   nextLabel:null,      waitFor:"assigned"},
+  {id:"click_bed", icon:"🛏️",step:"STEP 2/5 — ベッド確認",text:"患者がベッドに入りました！\nベッドをクリックすると右側に詳細が表示されます。",                          hint:"💡 ベッドをクリックしてみましょう",        nextLabel:null,      waitFor:"bed_click"},
+  {id:"order",     icon:"📋",step:"STEP 3/5 — オーダー",  text:"まず「点滴」をオーダーしてください。\n検査結果が🔴🟡🟢で返ってきます。",                               hint:"💡 点滴ボタンを押してください",            nextLabel:null,      waitFor:"ordered"},
+  {id:"more_order",icon:"🔬",step:"STEP 4/5 — 追加検査",  text:"点滴をオーダーしました！\nもう1件、「心電図」か「血液検査」もオーダーしてみましょう。",                    hint:"💡 2件完了で転帰が解放されます",           nextLabel:null,      waitFor:"two_orders"},
+  {id:"disp",      icon:"🚪",step:"STEP 5/5 — 転帰の決定",text:"検査結果を見て転帰を決定してください。\n🔴が多ければICU、全部🟢なら帰宅が推奨されます。",                  hint:"💡 推奨ボタンがハイライトされます",        nextLabel:null,      waitFor:"disposed"},
+  {id:"done",      icon:"🎉",step:"完了！",               text:"チュートリアルを完了しました！\nステージ1が解放されます。",                                              hint:"",                                    nextLabel:"クリア！", waitFor:null},
+];
+
+// ===== ゲーム状態 =====
+let currentStage=null,tutStepIdx=0;
+let score=0,dispCountVal=0,satisfaction=100,shiftElapsed=0;
+let clockMin=8,clockSec=0;
+let beds=[],waitPatients=[],selectedBedId=null,dragPatient=null,callTimer=null;
+let panelOpen=true,selectedStaffId=null,dispTargetBedId=null;
+let staffState=[];
+let gameRunning=false,gameOver=false,gameClear=false;
+let mainLoop=null,staffEnabled=false,callEnabled=false,satEnabled=false;
+let progress={tutDone:false,s1Done:false};
+let orderCountForTut=0;
+
+function getUrgencyColor(p){return p>60?"#22c55e":p>30?"#f97316":"#ef4444";}
+
+function showToast(msg,type=""){
+  const t=document.getElementById("toast");t.textContent=msg;
+  t.className="toast show"+(type?" "+type:"");setTimeout(()=>t.className="toast",3200);
+}
+function showAlert(msg){
+  document.getElementById("alert-msg").textContent=msg;
+  document.getElementById("alert-bar").classList.add("show");
+  setTimeout(()=>document.getElementById("alert-bar").classList.remove("show"),5000);
+}
+function changeSat(delta){
+  if(!satEnabled||!gameRunning)return;
+  satisfaction=Math.max(0,Math.min(100,satisfaction+delta));
+  const pct=Math.round(satisfaction),col=pct>60?"#22c55e":pct>30?"#f97316":"#ef4444";
+  document.getElementById("sat-fill").style.width=pct+"%";
+  document.getElementById("sat-fill").style.background=col;
+  document.getElementById("sat-pct").textContent=pct+"%";
+  document.getElementById("sat-pct").style.color=col;
+  if(satisfaction<=0&&!gameOver)triggerGameOver();
+}
+function calcGrade(){
+  if(satisfaction>80&&score>500)return{g:"S",cls:"gS",c:"完璧なシフト！"};
+  if(satisfaction>60&&score>300)return{g:"A",cls:"gA",c:"優秀な判断でした。"};
+  if(satisfaction>40&&score>150)return{g:"B",cls:"gB",c:"良い対応でした。"};
+  if(satisfaction>20)           return{g:"C",cls:"gC",c:"優先順位を再確認しましょう。"};
+  return                               {g:"D",cls:"gD",c:"重症患者への対応を優先しましょう。"};
+}
+function triggerGameOver(){
+  if(gameOver||gameClear)return;
+  gameOver=true;gameRunning=false;if(mainLoop){clearInterval(mainLoop);mainLoop=null;}
+  const gr=calcGrade();
+  document.getElementById("go-score").textContent=score.toLocaleString();
+  document.getElementById("go-disp").textContent=dispCountVal;
+  const m=Math.floor(shiftElapsed/60),s=shiftElapsed%60;
+  document.getElementById("go-time").textContent=m+":"+(s<10?"0"+s:s);
+  document.getElementById("go-grade").textContent=gr.g;document.getElementById("go-grade").className="gbadge "+gr.cls;
+  document.getElementById("go-comment").textContent=gr.c;
+  document.getElementById("screen-go").classList.add("show");
+}
+function triggerClear(msg="クリア！",sub=""){
+  if(gameOver||gameClear)return;
+  gameClear=true;gameRunning=false;if(mainLoop){clearInterval(mainLoop);mainLoop=null;}
+  const gr=calcGrade(),sat=Math.round(satisfaction);
+  document.getElementById("cl-title").textContent=msg;
+  document.getElementById("cl-sub").textContent=sub||`転帰${dispCountVal}名・満足度${sat}%`;
+  document.getElementById("cl-score").textContent=score.toLocaleString();
+  document.getElementById("cl-disp").textContent=dispCountVal;
+  document.getElementById("cl-sat").textContent=sat+"%";
+  document.getElementById("cl-grade").textContent=gr.g;document.getElementById("cl-grade").className="gbadge "+gr.cls;
+  document.getElementById("cl-comment").textContent=gr.c;
+  document.getElementById("screen-cl").classList.add("show");
+}
+
+// ===== チュートリアル =====
+function showTutStep(idx){
+  const step=TUT_STEPS[idx];if(!step)return;
+  const nav=document.getElementById("tut-nav");nav.classList.add("show");
+  document.getElementById("tut-icon").textContent=step.icon;
+  document.getElementById("tut-step").textContent=step.step;
+  document.getElementById("tut-text").textContent=step.text;
+  document.getElementById("tut-hint").textContent=step.hint;
+  const nb=document.getElementById("tut-next");
+  if(step.nextLabel){nb.style.display="";nb.textContent=step.nextLabel;nb.disabled=false;}
+  else nb.style.display="none";
+  showSpotlight(step.id);
+}
+function showSpotlight(stepId){
+  const ring=document.getElementById("sp-ring");
+  const map={drag:"wait-list",click_bed:"critical-beds",order:"rp-body",more_order:"rp-body",disp:"rp-body"};
+  const targetId=map[stepId];
+  if(!targetId){ring.style.display="none";return;}
+  const shell=document.getElementById("er-area"),target=document.getElementById(targetId);
+  if(!target){ring.style.display="none";return;}
+  const sr=shell.getBoundingClientRect(),tr=target.getBoundingClientRect(),pad=8;
+  ring.style.display="block";
+  ring.style.left=(tr.left-sr.left-pad)+"px";ring.style.top=(tr.top-sr.top-pad)+"px";
+  ring.style.width=(tr.width+pad*2)+"px";ring.style.height=(tr.height+pad*2)+"px";
+}
+function nextTutStep(){
+  tutStepIdx++;if(tutStepIdx>=TUT_STEPS.length)return;
+  showTutStep(tutStepIdx);
+  if(TUT_STEPS[tutStepIdx].id==="done") completeTutorial();
+}
+function skipTut(){
+  document.getElementById("tut-nav").classList.remove("show");
+  document.getElementById("sp-ring").style.display="none";
+  progress.tutDone=true;updateUnlocks();
+}
+function checkTutEvent(event){
+  if(currentStage!=="tutorial")return;
+  const step=TUT_STEPS[tutStepIdx];if(!step||!step.waitFor)return;
+  let match=false;
+  if(step.waitFor==="assigned"&&event==="assigned")match=true;
+  if(step.waitFor==="bed_click"&&event==="bed_click")match=true;
+  if(step.waitFor==="ordered"&&event==="ordered")match=true;
+  if(step.waitFor==="two_orders"&&event==="ordered"&&orderCountForTut>=2)match=true;
+  if(step.waitFor==="disposed"&&event==="disposed")match=true;
+  if(match)nextTutStep();
+}
+function completeTutorial(){
+  progress.tutDone=true;updateUnlocks();
+  setTimeout(()=>{
+    triggerClear("チュートリアル完了！","基本操作をマスターしました");
+    document.getElementById("btn-next-stage").textContent="ステージ1へ →";
+    document.getElementById("btn-next-stage").onclick=()=>startStage("stage1");
+  },500);
+}
+
+// ===== ステージ設定 =====
+function makeBeds(){
+  return [
+    {id:"c1",zone:"critical",label:"重症 01",patient:null},{id:"c2",zone:"critical",label:"重症 02",patient:null},{id:"c3",zone:"critical",label:"重症 03",patient:null},
+    {id:"e1",zone:"exam",label:"診察 01",patient:null},{id:"e2",zone:"exam",label:"診察 02",patient:null},{id:"e3",zone:"exam",label:"診察 03",patient:null},{id:"e4",zone:"exam",label:"診察 04",patient:null},{id:"e5",zone:"exam",label:"診察 05",patient:null},
+  ];
+}
+function setupTutorial(){
+  beds=makeBeds();
+  waitPatients=[{id:"w1",name:"佐々木 花子",age:32,sex:"女性",pmh:"なし",chief:"発熱・倦怠感",color:"green",HR:88,BP_sys:112,BP_dia:70,SpO2:98,GCS:15,RR:16,Temp:38.2,disease:"fever"}];
+  staffEnabled=false;satEnabled=false;callEnabled=false;
+  document.getElementById("staff-panel").style.display="none";
+  document.getElementById("shift-wrap").style.display="none";
+  document.getElementById("stage-lbl").textContent="Tutorial";
+  showTutStep(0);orderCountForTut=0;
+}
+function setupStage1(){
+  beds=makeBeds();
+  waitPatients=[
+    {id:"w1",name:"田中 恵子",age:45,sex:"女性",pmh:"花粉症",         chief:"発熱・咽頭痛",   color:"green", HR:82,BP_sys:118,BP_dia:74,SpO2:99,GCS:15,RR:15,Temp:38.6,disease:"fever"},
+    {id:"w2",name:"山本 大輔",age:28,sex:"男性",pmh:"なし",           chief:"右足首捻挫・疼痛",color:"green", HR:76,BP_sys:122,BP_dia:78,SpO2:99,GCS:15,RR:16,Temp:36.7,disease:"fever"},
+    {id:"w3",name:"鈴木 光子",age:68,sex:"女性",pmh:"高血圧・高脂血症",chief:"めまい・頭痛",  color:"orange",HR:92,BP_sys:158,BP_dia:94,SpO2:97,GCS:15,RR:17,Temp:36.9,disease:"bp"},
+  ];
+  staffEnabled=false;satEnabled=true;callEnabled=false;
+  document.getElementById("staff-panel").style.display="none";
+  document.getElementById("shift-wrap").style.display="flex";
+  document.getElementById("stage-lbl").textContent="Stage 1";
+  document.getElementById("tut-nav").classList.remove("show");
+  document.getElementById("sp-ring").style.display="none";
+}
+function resetGame(){
+  score=0;dispCountVal=0;satisfaction=100;shiftElapsed=0;clockMin=8;clockSec=0;
+  selectedBedId=null;dragPatient=null;panelOpen=true;
+  gameRunning=true;gameOver=false;gameClear=false;
+  if(mainLoop){clearInterval(mainLoop);mainLoop=null;}
+  if(callTimer){clearInterval(callTimer);callTimer=null;}
+  staffState=STAFF_DEFS.map(s=>({...s,fatigue:0,onBreak:false,assignedBedId:null,absent:false}));
+  ["score-disp","disp-count"].forEach(id=>document.getElementById(id).textContent="0");
+  document.getElementById("sat-fill").style.cssText="width:100%;background:#22c55e;";
+  document.getElementById("sat-pct").style.cssText="color:#22c55e;";document.getElementById("sat-pct").textContent="100%";
+  document.getElementById("shift-fill").style.width="100%";document.getElementById("shift-time").textContent="4:00";
+  ["screen-go","screen-cl"].forEach(id=>document.getElementById(id).classList.remove("show"));
+  document.getElementById("alert-bar").classList.remove("show");
+  document.getElementById("call-overlay").classList.remove("active");
+  document.getElementById("top-alert").style.display="none";
+}
+
+// ===== ステージ開始 =====
+function startStage(stageName){
+  currentStage=stageName;resetGame();
+  document.getElementById("title-screen").style.display="none";
+  document.getElementById("game-screen").style.display="flex";
+  if(stageName==="tutorial") setupTutorial();
+  else if(stageName==="stage1") setupStage1();
+  renderBeds();renderWaitList();renderDetail();
+  mainLoop=setInterval(gameLoop,2000);
+  if(callEnabled)setTimeout(triggerCall,6000);
+}
+function tryStage(stageName){
+  if(stageName==="stage1"&&!progress.tutDone){showToast("先にチュートリアルをクリアしてください","warn");return;}
+  startStage(stageName);
+}
+function backToTitle(){
+  if(mainLoop){clearInterval(mainLoop);mainLoop=null;}
+  if(callTimer){clearInterval(callTimer);callTimer=null;}
+  document.getElementById("game-screen").style.display="none";
+  document.getElementById("title-screen").style.display="flex";
+  ["screen-go","screen-cl"].forEach(id=>document.getElementById(id).classList.remove("show"));
+  document.getElementById("call-overlay").classList.remove("active");
+  currentStage=null;updateUnlocks();
+}
+function updateUnlocks(){
+  if(progress.tutDone){
+    document.getElementById("card-s1").classList.remove("locked");
+    document.getElementById("right-s1").innerHTML=`<div style="font-size:20px;font-weight:800;color:#60a5fa;">→</div>`;
+    document.getElementById("grade-tut").textContent="✓";
+  }
+}
+
+// ===== メインループ =====
+function gameLoop(){
+  if(!gameRunning)return;
+  shiftElapsed+=2;
+  clockSec+=2;if(clockSec>=60){clockSec-=60;clockMin++;}if(clockMin>=24)clockMin=0;
+  document.getElementById("clock").textContent=String(clockMin).padStart(2,"0")+":"+String(clockSec).padStart(2,"0");
+
+  if(satEnabled){
+    const SHIFT=240,rem=Math.max(0,SHIFT-shiftElapsed);
+    document.getElementById("shift-fill").style.width=(rem/SHIFT*100)+"%";
+    const m=Math.floor(rem/60),s=rem%60;
+    document.getElementById("shift-time").textContent=m+":"+(s<10?"0"+s:s);
+    if(shiftElapsed>=SHIFT){triggerClear("シフト完了！");return;}
+  }
+
+  if(staffEnabled){
+    staffState.forEach(st=>{
+      if(st.absent)return;
+      if(st.onBreak){st.fatigue=Math.max(0,st.fatigue-3.0*st.recoveryRate);if(st.fatigue<=0)st.onBreak=false;}
+      else if(st.assignedBedId){
+        const bed=beds.find(b=>b.id===st.assignedBedId),heavy=bed&&bed.patient&&bed.patient.color==="red";
+        st.fatigue=Math.min(100,st.fatigue+1.8*st.fatigueRate*(heavy?1.5:1));
+        const fs=fatigueState(st.fatigue);
+        if(fs.incidentChance>0&&Math.random()<fs.incidentChance&&bed&&bed.patient&&!bed.patient.disposed)triggerIncident(st,bed);
+      }
+    });
+    renderStaffList();
+  }
+
+  let critAlert=null;
+  beds.forEach(bed=>{
+    if(!bed.patient||bed.patient.disposed)return;
+    const p=bed.patient,dr=v=>+(v+(Math.random()-0.5)*0.4).toFixed(1),iv=p.ivOrdered?0.5:1;
+    p.HR=Math.min(180,Math.max(30,Math.round(p.HR+dr(({red:2,orange:1,yellow:0,green:0}[p.color]||0)*iv))));
+    p.BP_sys=Math.min(200,Math.max(50,Math.round(p.BP_sys+dr(({red:-2,orange:-1,yellow:0,green:0}[p.color]||0)*iv))));
+    p.SpO2=Math.min(100,Math.max(70,Math.round(p.SpO2+dr(({red:-0.3,orange:-0.1,yellow:0,green:0}[p.color]||0)*iv))));
+    if(p.BP_sys<75||p.SpO2<90){changeSat(-2);critAlert=`${p.name} — BP${p.BP_sys}/SpO₂${p.SpO2}% 危険域！`;}
+    if(p.color==="red"&&satEnabled)changeSat(-0.3);
+  });
+  if(critAlert)showAlert(critAlert);
+
+  if(currentStage==="stage1"){
+    const allDone=beds.every(b=>!b.patient||b.patient.disposed)&&waitPatients.length===0;
+    if(allDone)triggerClear("ステージ1 クリア！","全患者の転帰を決定しました");
+  }
+
+  renderBeds();if(selectedBedId)renderDetail();
+}
+
+function triggerIncident(staff,bed){
+  if(!bed.patient)return;
+  changeSat(-8);score=Math.max(0,score-30);document.getElementById("score-disp").textContent=score.toLocaleString();
+  showAlert(`⚠ インシデント！${staff.short}（${staff.roleLabel}）がミス（−30pt）`);
+  showToast(`${staff.short}を休憩させてください`,"err");
+}
+
+// ===== SVG描画 =====
+function makeBedSVG(bed,w,h,isSel){
+  const p=bed.patient,ck=p?p.color:"empty",c=COLORS[ck],occ=!!p;
+  const fw=6,fr=3,bx=fw,by=fw,bw=w-fw*2,bh=h-fw*2;
+  const px=bx+10,py=by+7,pw=bw-20,ph=Math.round(bh*0.27);
+  const mx=bx+4,my=by+ph+9,mw=bw-8,mh=bh-ph-17;
+  const bi=6,blkx=mx+bi,blky=my+bi,blkw=mw-bi*2,blkh=mh-bi*2;
+  const monX=w-22,monY=by+6;
+  let dots="";
+  if(occ&&staffEnabled){
+    let sx=8;
+    staffState.filter(s=>s.assignedBedId===bed.id&&!s.absent).forEach(st=>{
+      const fs=fatigueState(st.fatigue),isN=st.role==="nurse";
+      dots+=`<circle cx="${sx}" cy="${h-12}" r="4.5" fill="${isN?"#1e3a5f":"#2d1b4e"}" stroke="${fs.color}" stroke-width="1.5"/>
+        <text x="${sx}" y="${h-8.5}" text-anchor="middle" font-size="4.5" fill="${isN?"#93c5fd":"#c4b5fd"}" font-family="sans-serif">${isN?"N":"D"}</text>`;
+      sx+=11;
+    });
+  }
+  const u=occ?Math.round(p.urgency||100):100,uC=getUrgencyColor(u),uW=Math.round((bw-8)*(u/100));
+  const uBar=occ?`<rect x="${bx+4}" y="${h-5}" width="${bw-8}" height="3" rx="1.5" fill="#1e2736"/><rect x="${bx+4}" y="${h-5}" width="${uW}" height="3" rx="1.5" fill="${uC}" opacity="0.9"/>`:"";
+  const bpC=occ?(p.BP_sys<75?"#ef4444":p.BP_sys<90?"#f97316":"#22c55e"):"#2d3748";
+  let mon="";
+  if(occ){const pts=[];for(let i=0;i<=16;i++){const t=i/16,x2=monX-8+t*16;let y2=monY+9;if(i===4)y2=monY+2;else if(i===5)y2=monY+16;else if(i===6)y2=monY+9;else if(i===10)y2=monY+4;else if(i===11)y2=monY+2;else if(i===12)y2=monY+16;else if(i===13)y2=monY+4;pts.push(`${x2},${y2}`);}mon=`<rect x="${monX-10}" y="${monY}" width="20" height="22" rx="2" fill="#0f172a" stroke="${bpC}" stroke-width="0.8"/><polyline points="${pts.join(" ")}" fill="none" stroke="${bpC}" stroke-width="1" opacity="0.9"/>`;}
+  const sel=isSel?`<rect x="1" y="1" width="${w-2}" height="${h-2}" rx="7" fill="none" stroke="#60a5fa" stroke-width="2"/>`:"";
+  return `<svg width="${w}" height="${h+3}" viewBox="0 0 ${w} ${h+3}" xmlns="http://www.w3.org/2000/svg">
+    ${occ?`<rect x="1" y="1" width="${w-2}" height="${h-2}" rx="7" fill="${c.glow}"/>`:""}
+    <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${fr}" fill="${c.mattress}" stroke="${c.frame}" stroke-width="1.5"/>
+    <rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="4" fill="${c.pillow}" stroke="${c.frame}" stroke-width="0.8" opacity="0.85"/>
+    <rect x="${mx}" y="${my}" width="${mw}" height="${mh}" rx="3" fill="${c.blanket}" opacity="0.9"/>
+    <rect x="${blkx}" y="${blky}" width="${blkw}" height="${blkh}" rx="2" fill="${c.mattress}" opacity="0.4"/>
+    ${occ?`<ellipse cx="${blkx+Math.round(blkw*0.5)}" cy="${blky+9}" rx="8" ry="8" fill="#b45309" opacity="0.75"/><rect x="${blkx+Math.round(blkw*0.18)}" y="${blky+4}" width="${Math.round(blkw*0.64)}" height="${blkh-8}" rx="3" fill="#2d3950" opacity="0.6"/>`:""}
+    ${occ?`<line x1="${w-fw-4}" y1="${by+4}" x2="${w-fw-4}" y2="${by+Math.round(bh*0.52)}" stroke="#4b5563" stroke-width="1.5"/><ellipse cx="${w-fw-4}" cy="${by+4}" rx="4" ry="2" fill="#374151" stroke="#4b5563" stroke-width="1"/><rect x="${w-fw-8}" y="${by+10}" width="8" height="13" rx="2" fill="#1e3a5f" opacity="0.8"/>`:""}
+    ${mon}${dots}${uBar}${sel}
+  </svg>`;
+}
+
+// ===== 描画 =====
+function renderBeds(){
+  ["critical-beds","exam-beds"].forEach(id=>document.getElementById(id).innerHTML="");
+  [{zone:"critical",cont:"critical-beds",w:96,h:104},{zone:"exam",cont:"exam-beds",w:60,h:78}].forEach(({zone,cont,w,h})=>{
+    const container=document.getElementById(cont);
+    beds.filter(b=>b.zone===zone).forEach(bed=>{
+      const wrap=document.createElement("div");
+      wrap.className="bed-wrap";wrap.dataset.bedId=bed.id;
+      const isSel=bed.id===selectedBedId;
+      const lbl=bed.patient
+        ?`<div style="font-size:8px;color:#e2e8f0;font-weight:500;">${bed.label}</div><div style="font-size:7px;color:#94a3b8;max-width:${w}px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${bed.patient.chief}</div>`
+        :`<div style="font-size:8px;color:#475569;">${bed.label}</div><div style="font-size:7px;color:#334155;">空き</div>`;
+      wrap.innerHTML=`<div class="drop-ring"></div><div class="drop-ring-blocked"></div>${makeBedSVG(bed,w,h,isSel)}<div style="text-align:center;">${lbl}</div>`;
+      wrap.addEventListener("click",()=>{if(!bed.patient)return;selectedBedId=bed.id;renderBeds();renderDetail();if(!panelOpen)togglePanel();checkTutEvent("bed_click");});
+      wrap.addEventListener("dragover",e=>{e.preventDefault();bed.patient?wrap.classList.add("drop-blocked"):wrap.classList.add("drop-target");});
+      wrap.addEventListener("dragleave",()=>{wrap.classList.remove("drop-target");wrap.classList.remove("drop-blocked");});
+      wrap.addEventListener("drop",e=>{e.preventDefault();wrap.classList.remove("drop-target");wrap.classList.remove("drop-blocked");assignPatient(bed.id);});
+      container.appendChild(wrap);
+    });
+  });
+  const crit=beds.filter(b=>b.zone==="critical"),exam=beds.filter(b=>b.zone==="exam");
+  const co=crit.filter(b=>b.patient).length,eo=exam.filter(b=>b.patient).length;
+  const sc=document.getElementById("stat-c"),se=document.getElementById("stat-e");
+  sc.textContent=co+"/"+crit.length;sc.className="val"+(co===crit.length?" red":" grn");
+  se.textContent=eo+"/"+exam.length;se.className="val"+(eo===exam.length?" red":" grn");
+}
+
+function renderWaitList(){
+  const list=document.getElementById("wait-list");list.innerHTML="";
+  document.getElementById("wait-count").textContent=waitPatients.length;
+  document.getElementById("drag-hint").style.display=waitPatients.length?"":"none";
+  waitPatients.forEach(p=>{
+    const card=document.createElement("div");
+    card.className=`wait-card ${TRIAGE_LV[p.color]||"lv3"}`;card.draggable=true;
+    card.innerHTML=`<div style="display:flex;align-items:center;"><span style="width:6px;height:6px;border-radius:50%;background:${TRIAGE_BDR[p.color]};display:inline-block;margin-right:3px;flex-shrink:0;"></span><span class="pt-name">${p.name}/${p.age}歳</span></div>
+      <div class="pt-chief">${p.chief}</div>
+      <div class="pt-vitals"><span class="vbadge hr">HR${p.HR}</span><span class="vbadge bp">BP${p.BP_sys}</span><span class="vbadge spo2">SpO₂${p.SpO2}%</span></div>`;
+    card.addEventListener("dragstart",e=>{dragPatient=p;card.classList.add("dragging");const g=document.getElementById("ghost");g.style.background=TRIAGE_BG[p.color]||"#0f2e1a";g.style.borderColor=TRIAGE_BDR[p.color]||"#22c55e";g.textContent=p.name+" — "+p.chief;g.style.display="block";e.dataTransfer.effectAllowed="move";});
+    card.addEventListener("drag",e=>{if(e.clientX===0&&e.clientY===0)return;const g=document.getElementById("ghost");g.style.left=(e.clientX+14)+"px";g.style.top=(e.clientY-18)+"px";});
+    card.addEventListener("dragend",()=>{card.classList.remove("dragging");document.getElementById("ghost").style.display="none";dragPatient=null;});
+    list.appendChild(card);
+  });
+}
+
+function renderStaffList(){
+  const el=document.getElementById("staff-list");el.innerHTML="";
+  staffState.forEach(st=>{
+    const fs=fatigueState(st.fatigue),div=document.createElement("div");
+    div.className="staff-item"+(st.onBreak?" on-break":"")+(st.id===selectedStaffId?" sel":"");
+    div.onclick=()=>openSpop(st.id);
+    const bed=beds.find(b=>b.id===st.assignedBedId),statusText=st.absent?"欠勤":st.onBreak?"休憩中":bed?bed.label:"待機中";
+    div.innerHTML=`<div class="sn-row"><span style="font-size:10px;">${st.absent?"⬛":fs.icon}</span><span class="sname">${st.short}</span><span class="rbadge ${st.rbCls}">${st.roleLabel}</span></div>
+      <div class="ss-row"><span style="font-size:8px;color:#475569;white-space:nowrap;">${statusText}</span><div class="ft"><div class="ff" style="width:${Math.round(st.fatigue)}%;background:${st.absent?"#334155":fs.color};"></div></div><span style="font-size:8px;color:${fs.color};white-space:nowrap;">${st.absent?"":Math.round(st.fatigue)+"%"}</span></div>`;
+    el.appendChild(div);
+  });
+}
+
+function renderDetail(){
+  const bed=beds.find(b=>b.id===selectedBedId);
+  const body=document.getElementById("rp-body"),title=document.getElementById("rp-title");
+  if(!bed||!bed.patient){title.textContent="患者詳細";body.innerHTML=`<div class="no-sel"><i class="ti ti-user-search"></i>ベッドを選択するか<br>患者を割り当ててください</div>`;return;}
+  const p=bed.patient;title.textContent=bed.label;
+  const aHR=p.HR>110||p.HR<55,aBP=p.BP_sys<90,aSp=p.SpO2<95;
+  const pendingIds=new Set(p.orders.filter(o=>o.status==="pending").map(o=>o.id));
+  const doneIds=new Set(p.orders.filter(o=>o.status==="done").map(o=>o.id));
+  const doneCnt=doneIds.size,canDispose=doneCnt>=1;
+  const sigs=Object.values(p.signals||{});
+  const redCnt=sigs.filter(s=>s.color==="red").length,yelCnt=sigs.filter(s=>s.color==="yellow").length;
+  let rec=redCnt>=2?"icu":redCnt===1||yelCnt>=2?"admit":"discharge";
+  if(p.disease&&DISEASE_SIG[p.disease])rec=DISEASE_SIG[p.disease].rec;
+
+  const assigned=staffEnabled?staffState.filter(s=>s.assignedBedId===bed.id&&!s.absent):[];
+  const avail=staffEnabled?staffState.filter(s=>!s.assignedBedId&&!s.onBreak&&!s.absent):[];
+  const speedMult=assigned.length>0?Math.min(...assigned.map(s=>fatigueState(s.fatigue).speedMult)):1.0;
+
+  const assignedHTML=staffEnabled?(assigned.length
+    ?assigned.map(st=>{const fs=fatigueState(st.fatigue);return `<div class="sa-row"><div class="sa-name"><span>${fs.icon}</span><span style="font-weight:600;">${st.short}</span><span class="rbadge ${st.rbCls}" style="font-size:7px;">${st.roleLabel}</span></div><div style="display:flex;align-items:center;gap:3px;"><div style="width:32px;height:4px;background:#111827;border-radius:2px;overflow:hidden;"><div style="width:${Math.round(st.fatigue)}%;height:100%;background:${fs.color};border-radius:2px;"></div></div><span style="font-size:8px;color:${fs.color};">${Math.round(st.fatigue)}%</span></div><button class="btn-rm" onclick="removeStaff('${st.id}')">外す</button></div>`;}).join("")
+    :`<div style="font-size:9px;color:#334155;padding:3px;">スタッフ未配置</div>`):"";
+  const addBtns=staffEnabled&&avail.length&&!p.disposed
+    ?`<div style="margin-top:4px;font-size:8px;color:#475569;margin-bottom:2px;">追加配置：</div><div class="sa-add-row">${avail.map(st=>`<button class="btn-asgn" onclick="assignStaff('${st.id}','${bed.id}')"><span class="ban">${st.short}</span><span class="bar">${st.roleShort}</span></button>`).join("")}</div>`:"";
+
+  function obtn(o){
+    const isPend=pendingIds.has(o.id),isDone=doneIds.has(o.id),sig=p.signals&&p.signals[o.id];
+    let cls="",icon=o.icon,sub="";
+    if(isPend){cls="pending";icon="ti-loader-2";sub="処理中...";}
+    else if(isDone&&sig){cls=`sig-${sig.color}`;icon=sig.color==="red"?"ti-alert-triangle":sig.color==="yellow"?"ti-alert-circle":"ti-circle-check";sub=sig.text;}
+    return `<button class="obtn ${cls}" ${isDone||isPend||p.disposed?"disabled":""} ${isDone||isPend||p.disposed?"":`onclick="placeOrder('${bed.id}','${o.id}')"`}><i class="ti ${icon}"></i><span>${o.label}</span>${sub?`<span style="font-size:8px;">${sub}</span>`:""}</button>`;
+  }
+
+  const sigEntries=Object.entries(p.signals||{});
+  const sigHTML=sigEntries.length?`<div class="sig-bar"><div class="sig-bar-title">検査結果サマリー</div><div class="sig-list">
+    ${sigEntries.map(([id,sig])=>{const sc=SIG_COLORS[sig.color];return `<div class="sig-row ${sc.rowClass}"><div class="sig-dot" style="background:${sc.dot};"></div><span class="sig-name">${sig.label}</span><span class="sig-res" style="color:${sc.text};">${sig.text}</span></div>`;}).join("")}
+  </div></div>`:"";
+
+  const dispOpts=[
+    {id:"icu",label:"ICU転送",icon:"ti-heart-rate-monitor",color:"#ef4444",recBg:"background:#7f1d1d;color:#fca5a5;"},
+    {id:"admit",label:"一般病棟入院",icon:"ti-building-hospital",color:"#60a5fa",recBg:"background:#1e3a5f;color:#93c5fd;"},
+    {id:"discharge",label:"帰宅",icon:"ti-home",color:"#22c55e",recBg:"background:#0f2e1a;color:#86efac;"},
+  ];
+  const dispHTML=p.disposed
+    ?`<div class="disp-done"><i class="ti ti-circle-check"></i>転帰決定済み</div>`
+    :`<div class="disp-sec"><div class="disp-sec-title">転帰の決定${canDispose?'<span style="font-size:9px;color:#22c55e;margin-left:6px;">✓ 解放済み</span>':'<span style="font-size:9px;color:#334155;margin-left:6px;">検査1件完了後に解放</span>'}</div>
+    <div class="disp-opts">${dispOpts.map(opt=>{const isRec=canDispose&&rec===opt.id;return `<button class="disp-btn${isRec?" rec "+opt.id:""}" ${canDispose&&!p.disposed?`onclick="openDispModal('${bed.id}','${opt.id}')"`:"disabled"}><i class="ti ${opt.icon}" style="font-size:14px;color:${opt.color};"></i><span style="color:#f1f5f9;">${opt.label}</span>${isRec?`<span class="rec-badge" style="${opt.recBg}">推奨</span>`:""}</button>`;}).join("")}</div></div>`;
+
+  body.innerHTML=`
+    <div class="det-sec">
+      <div class="det-name">${p.name}${p.ivOrdered?'<span style="font-size:8px;color:#6ee7b7;margin-left:6px;">輸液中</span>':""}</div>
+      <div class="det-age">${p.age}歳 ${p.sex}・${p.pmh}</div>
+      <div class="chief-badge" style="background:${TRIAGE_BG[p.color]||"#0f2e1a"};border:0.5px solid ${TRIAGE_BDR[p.color]||"#22c55e"};color:${TRIAGE_BDR[p.color]||"#22c55e"};">${p.chief}</div>
+      <div class="vgrid">
+        <div class="vbox ${aHR?"w":""}"><div class="vlbl">HR</div><div class="vval${aHR?" ab":""}">${p.HR}<span class="vunit">bpm</span></div></div>
+        <div class="vbox ${aBP?"w":""}"><div class="vlbl">BP</div><div class="vval${aBP?" ab":""}">${p.BP_sys}/${p.BP_dia}<span class="vunit">mmHg</span></div></div>
+        <div class="vbox ${aSp?"w":""}"><div class="vlbl">SpO₂</div><div class="vval${aSp?" ab":""}">${p.SpO2}<span class="vunit">%</span></div></div>
+        <div class="vbox"><div class="vlbl">GCS</div><div class="vval">${p.GCS}<span class="vunit">/15</span></div></div>
+        <div class="vbox"><div class="vlbl">RR</div><div class="vval">${p.RR}<span class="vunit">/min</span></div></div>
+        <div class="vbox"><div class="vlbl">体温</div><div class="vval">${typeof p.Temp==="number"?p.Temp.toFixed(1):p.Temp}<span class="vunit">°C</span></div></div>
+      </div>
+    </div>
+    ${staffEnabled?`<div class="sa-sec"><div class="sa-title">スタッフ配置 <span style="font-size:8px;color:#475569;font-weight:normal;">— ${assigned.length>0?"処置速度 ×"+speedMult.toFixed(1):"配置で処置が速くなります"}</span></div><div class="sa-list">${assignedHTML}</div>${addBtns}</div>`:""}
+    <div class="ord-sec"><div class="ord-sec-title">検査・処置オーダー</div><div class="ord-grid">${ORDERS.map(obtn).join("")}</div></div>
+    ${sigHTML}${dispHTML}`;
+}
+
+// ===== アクション =====
+function assignPatient(bedId){
+  if(!dragPatient)return;
+  const bed=beds.find(b=>b.id===bedId);if(!bed||bed.patient){showToast("このベッドはすでに使用中です","warn");return;}
+  const mm=bed.zone==="critical"&&(dragPatient.color==="green"||dragPatient.color==="yellow");
+  const uu=bed.zone==="exam"&&dragPatient.color==="red";
+  bed.patient={...dragPatient,BP_dia:dragPatient.BP_dia||70,orders:[],signals:{},disposed:false,urgency:100,ivOrdered:false};
+  waitPatients=waitPatients.filter(p=>p.id!==dragPatient.id);
+  let pts=dragPatient.color==="red"?100:dragPatient.color==="orange"?60:30;
+  if(mm){pts-=40;changeSat(-5);}if(uu){pts-=50;changeSat(-8);}
+  score=Math.max(0,score+pts);document.getElementById("score-disp").textContent=score.toLocaleString();
+  selectedBedId=bedId;renderBeds();renderWaitList();renderDetail();if(!panelOpen)togglePanel();
+  const wrap=document.querySelector(`[data-bed-id="${bedId}"]`);
+  if(wrap){const fl=document.createElement("div");fl.className="afl";wrap.style.position="relative";wrap.appendChild(fl);setTimeout(()=>fl.remove(),700);}
+  if(mm)showToast("⚠ 軽症患者を重症ベッドへ（−40pt）","warn");
+  else if(uu)showToast("⚠ 重症患者を診察室へ（−50pt）","warn");
+  else showToast(`${dragPatient.name}を「${bed.label}」に割り当てました`);
+  checkTutEvent("assigned");
+}
+
+function placeOrder(bedId,orderId){
+  const bed=beds.find(b=>b.id===bedId);if(!bed||!bed.patient||bed.patient.disposed)return;
+  if(bed.patient.orders.find(o=>o.id===orderId))return;
+  const def=ORDERS.find(o=>o.id===orderId);if(!def)return;
+  bed.patient.orders.push({id:orderId,status:"pending"});
+  score+=10;document.getElementById("score-disp").textContent=score.toLocaleString();
+  showToast(`${def.label} をオーダーしました`);renderDetail();
+  const assigned=staffEnabled?staffState.filter(s=>s.assignedBedId===bedId&&!s.absent):[];
+  const speedMult=assigned.length>0?Math.min(...assigned.map(s=>fatigueState(s.fatigue).speedMult)):1.0;
+  orderCountForTut++;checkTutEvent("ordered");
+  setTimeout(()=>{
+    if(!bed.patient)return;
+    const o=bed.patient.orders.find(x=>x.id===orderId);if(!o)return;
+    o.status="done";if(orderId==="iv")bed.patient.ivOrdered=true;
+    const ds=bed.patient.disease&&DISEASE_SIG[bed.patient.disease];
+    const sig=(ds&&ds[orderId])||{color:"green",text:"🟢 異常なし"};
+    bed.patient.signals[orderId]={...sig,label:def.label};
+    score+=10;document.getElementById("score-disp").textContent=score.toLocaleString();
+    if(selectedBedId===bedId)renderDetail();
+    checkTutEvent("ordered");
+  },Math.round(def.time/speedMult)*1000);
+}
+
+function openDispModal(bedId,optId){
+  dispTargetBedId=bedId;
+  const bed=beds.find(b=>b.id===bedId);
+  document.getElementById("dm-title").textContent=`転帰を決定 — ${bed?.patient?.name}`;
+  document.getElementById("disp-modal-bg").classList.add("show");
+}
+function applyDisp(type){
+  document.getElementById("disp-modal-bg").classList.remove("show");
+  const bed=beds.find(b=>b.id===dispTargetBedId);if(!bed||!bed.patient)return;
+  const p=bed.patient;
+  const ds=p.disease&&DISEASE_SIG[p.disease];
+  const isCorrect=ds?type===ds.rec:(type==="discharge");
+  let pts=isCorrect?150:40;pts+=Math.round((p.urgency||100)*0.3);
+  score+=pts;dispCountVal++;
+  changeSat(isCorrect?5:-10);
+  document.getElementById("score-disp").textContent=score.toLocaleString();
+  document.getElementById("disp-count").textContent=dispCountVal;
+  if(staffEnabled)staffState.forEach(st=>{if(st.assignedBedId===dispTargetBedId)st.assignedBedId=null;});
+  p.disposed=true;
+  const labels={admit:"一般病棟入院",icu:"ICU転送",discharge:"帰宅"};
+  showToast(`${p.name} — ${labels[type]}（+${pts}pt）${isCorrect?"✓":"⚠ 転帰を再確認"}`);
+  selectedBedId=dispTargetBedId;renderBeds();renderDetail();checkTutEvent("disposed");
+}
+
+function togglePanel(){panelOpen=!panelOpen;document.getElementById("right-panel").classList.toggle("collapsed",!panelOpen);}
+
+function openSpop(staffId){
+  selectedStaffId=staffId;const st=staffState.find(s=>s.id===staffId);if(!st)return;
+  const fs=fatigueState(st.fatigue);
+  document.getElementById("spop-name").textContent=`${fs.icon} ${st.name}`;
+  document.getElementById("spop-role").textContent=st.roleLabel;
+  document.getElementById("spop-trait").textContent=st.trait;
+  document.getElementById("spop-pct").textContent=`${Math.round(st.fatigue)}%`;
+  document.getElementById("spop-fill").style.width=Math.round(st.fatigue)+"%";
+  document.getElementById("spop-fill").style.background=fs.color;
+  const statusEl=document.getElementById("spop-status");
+  if(st.absent){statusEl.style.cssText="background:rgba(71,85,105,0.3);color:#94a3b8;";statusEl.textContent="本日欠勤中";}
+  else if(st.onBreak){statusEl.style.cssText="background:rgba(249,115,22,0.12);color:#fdba74;";statusEl.textContent=`休憩中 — 疲労${Math.round(st.fatigue)}%（回復中）`;}
+  else if(st.assignedBedId){const bed=beds.find(b=>b.id===st.assignedBedId);statusEl.style.cssText="background:rgba(59,130,246,0.1);color:#93c5fd;";statusEl.textContent=`${bed?bed.label:""}に配置中 — ${fs.label}`;}
+  else{statusEl.style.cssText="background:rgba(34,197,94,0.1);color:#86efac;";statusEl.textContent=`待機中 — ${fs.label}`;}
+  const btn=document.getElementById("spop-btn");
+  if(st.absent){btn.textContent="欠勤のため操作不可";btn.className="spop-btn";btn.style.cssText="background:#1e2736;color:#475569;";btn.onclick=null;}
+  else if(st.onBreak){btn.textContent="✓ 現場復帰させる";btn.className="spop-btn spop-work";btn.style.cssText="";btn.onclick=()=>{st.onBreak=false;renderStaffList();closeSpop();showToast(`${st.short}が現場復帰しました`);};}
+  else{btn.textContent="☕ 休憩させる（疲労回復）";btn.className="spop-btn spop-break";btn.style.cssText="";btn.onclick=()=>{if(st.assignedBedId)st.assignedBedId=null;st.onBreak=true;renderStaffList();renderBeds();if(selectedBedId)renderDetail();closeSpop();showToast(`${st.short}を休憩させました`,"warn");};}
+  document.getElementById("spop").style.display="block";
+}
+function closeSpop(){document.getElementById("spop").style.display="none";selectedStaffId=null;}
+function assignStaff(staffId,bedId){const st=staffState.find(s=>s.id===staffId);if(!st||st.onBreak||st.absent||st.assignedBedId)return;st.assignedBedId=bedId;renderStaffList();renderBeds();if(selectedBedId)renderDetail();showToast(`${st.short}（${st.roleLabel}）を${beds.find(b=>b.id===bedId)?.label}に配置`);}
+function removeStaff(staffId){const st=staffState.find(s=>s.id===staffId);if(!st)return;st.assignedBedId=null;renderStaffList();renderBeds();if(selectedBedId)renderDetail();}
+
+// ===== 入電 =====
+const CALL_PATIENTS=[
+  {name:"木村 義男",age:62,sex:"男性",chief:"胸痛・呼吸困難",vitals:"HR 128 / BP 76/44 / SpO₂ 91%",triage:"赤（Level 1）",scene:"意識混濁",eta:4,dist:"約2.1km",color:"red",HR:128,BP_sys:76,BP_dia:44,SpO2:91,GCS:12,RR:26,Temp:36.4,disease:"acs"},
+  {name:"高橋 由美",age:70,sex:"女性",chief:"意識レベル低下",vitals:"HR 52 / BP 96/60 / SpO₂ 95%",triage:"橙（Level 2）",scene:"血糖 44",eta:6,dist:"約4.2km",color:"orange",HR:52,BP_sys:96,BP_dia:60,SpO2:95,GCS:10,RR:18,Temp:36.1,disease:"bp"},
+];
+const CALL_UNITS=[{unit:"豊島第2救急隊",station:"豊島消防署"},{unit:"新宿特別救助隊",station:"新宿消防署"}];
+let pendingCall=null;
+
+function triggerCall(){
+  if(!gameRunning||!callEnabled)return;
+  const p=CALL_PATIENTS[Math.floor(Math.random()*CALL_PATIENTS.length)];
+  const u=CALL_UNITS[Math.floor(Math.random()*CALL_UNITS.length)];
+  pendingCall=p;
+  document.getElementById("call-unit").textContent=u.unit+" より入電";
+  document.getElementById("call-station").textContent=u.station;
+  ["c-patient","c-chief","c-vitals","c-triage","c-scene","c-dist"].forEach((id,i)=>{
+    const vals=[`${p.name} / ${p.age}歳 ${p.sex}`,p.chief,p.vitals,p.triage,p.scene,p.dist];
+    document.getElementById(id).textContent=vals[i];
+  });
+  document.getElementById("c-triage").className="call-val"+(p.color==="red"?" red":" orange");
+  let eta=p.eta;document.getElementById("c-eta").textContent=eta;
+  clearInterval(callTimer);
+  callTimer=setInterval(()=>{eta=Math.max(0,eta-1);document.getElementById("c-eta").textContent=eta;if(eta===0)clearInterval(callTimer);},1000);
+  document.getElementById("call-overlay").classList.add("active");
+  document.getElementById("top-alert").style.display="";
+}
+function acceptCall(){
+  clearInterval(callTimer);document.getElementById("call-overlay").classList.remove("active");document.getElementById("top-alert").style.display="none";
+  if(pendingCall){waitPatients.push({...pendingCall,id:"w"+Date.now()});renderWaitList();showToast(`${pendingCall.name}が到着 — ベッドへ割り当ててください`,"warn");score+=50;document.getElementById("score-disp").textContent=score.toLocaleString();}
+  pendingCall=null;if(callEnabled)setTimeout(triggerCall,15000+Math.random()*10000);
+}
+function declineCall(){
+  clearInterval(callTimer);document.getElementById("call-overlay").classList.remove("active");document.getElementById("top-alert").style.display="none";
+  changeSat(-5);showToast("受け入れ不可 — 満足度が低下しました","warn");
+  pendingCall=null;if(callEnabled)setTimeout(triggerCall,15000+Math.random()*10000);
+}
+
+// 初期化
+updateUnlocks();
+</script>
+</body>
+</html>
