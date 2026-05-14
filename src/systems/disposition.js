@@ -13,10 +13,12 @@ export function openDispModal(bedId) {
   document.getElementById("disp-modal-bg").classList.add("show");
 }
 
-export function applyDisp(type) {
+export function applyDisp(type, bedId) {
   document.getElementById("disp-modal-bg").classList.remove("show");
-  const bed = state.beds.find(b => b.id === state.dispTargetBedId);
+  const targetId = bedId || state.dispTargetBedId;
+  const bed = state.beds.find(b => b.id === targetId);
   if (!bed || !bed.patient) return;
+  state.dispTargetBedId = targetId;
   const p = bed.patient;
 
   const ds    = p.disease && DISEASE_SIG[p.disease];

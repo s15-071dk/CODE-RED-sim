@@ -248,7 +248,7 @@ export function renderDetail() {
     : `<div class="disp-sec"><div class="disp-sec-title">転帰の決定${canDispose ? '<span style="font-size:9px;color:#22c55e;margin-left:6px;">✓ 解放済み</span>' : '<span style="font-size:9px;color:#334155;margin-left:6px;">検査1件完了後に解放</span>'}</div>
     <div class="disp-opts">${dispOpts.map(opt => {
       const isRec = canDispose && rec === opt.id;
-      return `<button class="disp-btn${isRec ? " rec " + opt.id : ""}" ${canDispose && !p.disposed ? `onclick="dispTargetBedId='${bed.id}';applyDisp('${opt.id}')"` : "disabled"}><i class="ti ${opt.icon}" style="font-size:14px;color:${opt.color};"></i><span style="color:#f1f5f9;">${opt.label}</span>${isRec ? `<span class="rec-badge" style="${opt.recBg}">推奨</span>` : ""}</button>`;
+      return `<button class="disp-btn${isRec ? " rec " + opt.id : ""}" ${canDispose && !p.disposed ? `onclick="applyDisp('${opt.id}','${bed.id}')"` : "disabled"}><i class="ti ${opt.icon}" style="font-size:14px;color:${opt.color};"></i><span style="color:#f1f5f9;">${opt.label}</span>${isRec ? `<span class="rec-badge" style="${opt.recBg}">推奨</span>` : ""}</button>`;
     }).join("")}</div></div>`;
 
   body.innerHTML = `
