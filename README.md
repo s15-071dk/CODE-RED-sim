@@ -91,10 +91,10 @@
 ## ローカルでの起動方法
 
 ```bash
-git clone https://github.com/your-username/code-red-er.git
-cd code-red-er
-# index.html をブラウザで開くだけで動作します
-open index.html
+git clone https://github.com/your-username/CODE-RED-sim.git
+cd CODE-RED-sim
+# CODERED.html をブラウザで開くだけで動作します
+open CODERED.html
 ```
 
 ---

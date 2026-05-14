@@ -62,10 +62,13 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .top-stat .lbl{font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;}
 .top-stat .val{font-size:11px;font-weight:500;color:#f1f5f9;}
 .top-stat .val.red{color:#ef4444;}.top-stat .val.grn{color:#22c55e;}
-.sat-wrap{display:flex;align-items:center;gap:5px;flex:1;max-width:150px;}
-.sat-track{flex:1;height:8px;background:#1e2736;border-radius:4px;overflow:hidden;border:0.5px solid #2d3748;}
-.sat-fill{height:100%;border-radius:4px;transition:width 0.6s,background 0.6s;}
-.sat-pct{font-size:10px;font-weight:500;white-space:nowrap;}
+.sat-wrap{display:flex;flex-direction:column;gap:2px;min-width:130px;max-width:160px;}
+.sat-lbl-row{display:flex;justify-content:space-between;align-items:center;}
+.sat-lbl{font-size:8px;color:#94a3b8;letter-spacing:0.3px;white-space:nowrap;}
+.sat-pct{font-size:9px;font-weight:700;white-space:nowrap;}
+.sat-track{width:100%;height:13px;background:#0f172a;border-radius:3px;border:1px solid #2d3748;overflow:hidden;position:relative;}
+.sat-fill{height:100%;transition:width 0.6s,background 0.6s;}
+.sat-track::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent calc(25% - 1px),rgba(15,23,42,0.7) calc(25% - 1px),rgba(15,23,42,0.7) 25%);pointer-events:none;}
 .shift-wrap{display:flex;align-items:center;gap:5px;}
 .shift-track{width:60px;height:5px;background:#1e2736;border-radius:3px;overflow:hidden;}
 .shift-fill{height:100%;background:#3b82f6;border-radius:3px;transition:width 1s;}
@@ -271,7 +274,7 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .btn-decline:hover{border-color:#ef4444;color:#fca5a5;}
 
 /* disposition確認 */
-.disp-modal-bg{background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;}
+.disp-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:1000;}
 .disp-modal-bg.show{display:flex;}
 .disp-modal{background:#111827;border:0.5px solid #2d3748;border-radius:10px;width:250px;overflow:hidden;}
 .dm-hdr{padding:9px 12px;border-bottom:0.5px solid #1e2736;font-size:11px;font-weight:500;color:#f1f5f9;}
@@ -337,6 +340,15 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .btn-go-retry{flex:1;padding:9px;border-radius:7px;border:none;background:#ef4444;color:#fff;font-size:11px;font-weight:700;cursor:pointer;}
 
 .ghost-card{position:fixed;pointer-events:none;z-index:9999;padding:5px 9px;border-radius:6px;border:1.5px solid;font-size:10px;font-weight:500;color:#f1f5f9;opacity:0.92;display:none;}
+
+/* ===== 会話ログパネル ===== */
+.log-panel{border-top:1px solid #2d3748;background:#0d1117;flex-shrink:0;display:flex;flex-direction:column;height:110px;width:100%;}
+.log-panel-hdr{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;padding:4px 14px 3px;border-bottom:0.5px solid #1e2736;}
+.log-body{flex:1;overflow-y:auto;padding:3px 14px;display:flex;flex-direction:column-reverse;}
+.log-entry{font-size:9px;line-height:1.5;padding:0 2px;animation:logfade 0.4s ease;}
+@keyframes logfade{from{opacity:0;transform:translateY(-2px);}to{opacity:1;transform:translateY(0);}}
+.log-entry.patient{color:#c4b5fd;}.log-entry.nurse{color:#93c5fd;}.log-entry.event{color:#86efac;}.log-entry.alert{color:#fca5a5;}.log-entry.system{color:#64748b;}
+.log-time{color:#334155;font-size:8px;margin-right:3px;}
 </style>
 </head>
 <body>
@@ -417,9 +429,11 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
     <div class="top-stat"><span class="lbl">得点</span><span class="val grn" id="score-disp">0</span></div>
     <div class="top-stat"><span class="lbl">転帰</span><span class="val grn" id="disp-count">0</span></div>
     <div class="sat-wrap">
-      <span style="font-size:9px;color:#94a3b8;">😊</span>
+      <div class="sat-lbl-row">
+        <span class="sat-lbl" id="sat-emoji">😊 患者満足度</span>
+        <span class="sat-pct" id="sat-pct" style="color:#22c55e;">100%</span>
+      </div>
       <div class="sat-track"><div class="sat-fill" id="sat-fill" style="width:100%;background:#22c55e;"></div></div>
-      <span class="sat-pct" id="sat-pct" style="color:#22c55e;">100%</span>
     </div>
     <div class="shift-wrap" id="shift-wrap" style="display:none;">
       <span style="font-size:9px;color:#64748b;">⏱</span>
@@ -478,6 +492,11 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
       </div>
       <div class="col-tab" onclick="togglePanel()">患者詳細</div>
     </div>
+  </div>
+
+  <div class="log-panel" id="log-panel">
+    <div class="log-panel-hdr">💬 ログ</div>
+    <div class="log-body" id="log-body"></div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -593,6 +612,80 @@ const DISEASE_SIG={
   fever: {blood:{color:"yellow",text:"🟡 WBC軽度上昇"},ecg:{color:"green",text:"🟢 正常洞調律"},echo:{color:"green",text:"🟢 心機能正常"},xray:{color:"green",text:"🟢 両肺野清明"},ct:{color:"green",text:"🟢 異常なし"},rec:"discharge"},
   abdo:  {blood:{color:"red",text:"🔴 炎症反応高値"},ecg:{color:"green",text:"🟢 正常"},echo:{color:"red",text:"🔴 腹水・炎症所見"},xray:{color:"yellow",text:"🟡 イレウス疑い"},ct:{color:"red",text:"🔴 腹膜炎所見"},rec:"admit"},
   bp:    {blood:{color:"yellow",text:"🟡 電解質 軽度異常"},ecg:{color:"yellow",text:"🟡 左室肥大パターン"},echo:{color:"yellow",text:"🟡 軽度壁肥厚"},xray:{color:"green",text:"🟢 異常なし"},ct:{color:"green",text:"🟢 頭蓋内異常なし"},rec:"admit"},
+  minor: {blood:{color:"green",text:"🟢 異常なし"},ecg:{color:"green",text:"🟢 正常洞調律"},echo:{color:"green",text:"🟢 異常なし"},xray:{color:"green",text:"🟢 異常なし"},ct:{color:"green",text:"🟢 異常なし"},rec:"discharge"},
+};
+
+const PATIENT_SPEECH={
+  acs:{
+    assign:["先生…胸が…締め付けられます","息が…苦しくて…","左腕も…痛くて…","助けてください…"],
+    critical:["痛い…もう限界です…","先生…まずいですか…","息ができない…"],
+    iv_done:["点滴、ありがとうございます…","少し…楽になった気が…"],
+    disposed:{icu:"先生、ありがとうございます…ICUで頑張ります",admit:"よろしくお願いします…",discharge:"ありがとうございました"}
+  },
+  stroke:{
+    assign:["あたま、がくがく…します","ことばが、でにくくて…","てが、しびれて…"],
+    critical:["せんせい…みえにくい…","うごかない…からだが…"],
+    iv_done:["てん、てき…ありがとう…"],
+    disposed:{icu:"ありがとう…いってきます",admit:"お願い…します",discharge:"ありがとうございました"}
+  },
+  fever:{
+    assign:["昨日から熱が下がらなくて","体がだるくて、何もできなかったんです","先生、お願いします","寒くて…震えがとまらなくて"],
+    critical:["先生、まだ熱があります…","体がつらいです…"],
+    iv_done:["点滴していただいて、ありがとうございます"],
+    disposed:{icu:"よろしくお願いします",admit:"お世話になります",discharge:"ありがとうございました。早く治します"}
+  },
+  abdo:{
+    assign:["お腹が…ものすごく痛い…","吐き気もあって…","右下が…特に…","動くと…痛みが走って…"],
+    critical:["痛みが…増してきてます…","先生…大丈夫ですか…"],
+    iv_done:["少し…楽になりました…"],
+    disposed:{icu:"よろしくお願いします",admit:"ありがとうございます",discharge:"ありがとうございました"}
+  },
+  bp:{
+    assign:["頭がずきずきして…","めまいもあって、気持ち悪いです","血圧が高いんですよね、私","病院に来てよかった"],
+    critical:["先生、頭が痛い…","視界がぼやけて…"],
+    iv_done:["点滴ありがとうございます"],
+    disposed:{icu:"よろしくお願いします",admit:"少し様子を見ます",discharge:"気をつけます。ありがとうございました"}
+  },
+  hypo:{
+    assign:["あれ…ここは…？","気分が悪くて…","ぼーっとして…"],
+    critical:["先生…頭が…","意識が…"],
+    iv_done:["あ…少し頭が…はっきりしてきました"],
+    disposed:{icu:"お願いします",admit:"ありがとうございます",discharge:"ありがとうございました。気をつけます"}
+  },
+  minor:{
+    assign:["足を捻って…歩けなくて","ちょっと転んで痛くて来たんですが","大したことないかもですが…"],
+    critical:["先生、まだ痛いです…","どうですかね…"],
+    iv_done:["ありがとうございます"],
+    disposed:{icu:"よろしくお願いします",admit:"ありがとうございます",discharge:"ありがとうございました！助かりました"}
+  },
+};
+
+const STAFF_SPEECH={
+  n1:{
+    assign:["青木です。すぐバイタル取ります","了解しました。準備します","重症確認、対応開始します"],
+    critical:["先生！バイタル危険域です！","すぐ介入が必要です！","急いでください！"],
+    order:["オーダー受け付けました","処理開始します","準備完了、進めます"]
+  },
+  n2:{
+    assign:["林です。担当しますね","わかりました、入りましょう","患者さん、こちらです"],
+    critical:["バイタル確認、危険です","対応急ぎます！","先生、来てください！"],
+    order:["はい、やります","オーダー確認","進めますね"]
+  },
+  n3:{
+    assign:["中川です。受け持ちます","すぐ対応します","了解です"],
+    critical:["先生、値が悪化してます","急いでください！","バイタル要注意です"],
+    order:["受け付けました","処理します","わかりました"]
+  },
+  d1:{
+    assign:["松本です。一緒に診ましょう","確認しました。介入します","状況把握、対応します"],
+    critical:["先生、緊急対応が必要です","バイタル悪化中です","早急に動きます"],
+    order:["オーダー確認しました","実施します","了解です"]
+  },
+  d2:{
+    assign:["小野です、担当します！","わかりました！","対応始めます！"],
+    critical:["先生これ…やばいですよね！？","急いだほうがいいですよね","どうしますか！？"],
+    order:["は、はい！やります！","了解です！","すぐやります！"]
+  },
 };
 
 const SIG_COLORS={
@@ -652,6 +745,21 @@ function showToast(msg,type=""){
   const t=document.getElementById("toast");t.textContent=msg;
   t.className="toast show"+(type?" "+type:"");setTimeout(()=>t.className="toast",3200);
 }
+
+let eventLog=[];
+const LOG_MAX=60;
+function logMsg(type,text){
+  const time=String(clockMin).padStart(2,'0')+':'+String(clockSec).padStart(2,'0');
+  eventLog.unshift({time,type,text});
+  if(eventLog.length>LOG_MAX)eventLog.pop();
+  renderLog();
+}
+function renderLog(){
+  const body=document.getElementById('log-body');if(!body)return;
+  body.innerHTML=[...eventLog].reverse().map(e=>`<div class="log-entry ${e.type}"><span class="log-time">[${e.time}]</span>${e.text}</div>`).join('');
+}
+function pickRandom(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
 function showAlert(msg){
   document.getElementById("alert-msg").textContent=msg;
   document.getElementById("alert-bar").classList.add("show");
@@ -665,6 +773,8 @@ function changeSat(delta){
   document.getElementById("sat-fill").style.background=col;
   document.getElementById("sat-pct").textContent=pct+"%";
   document.getElementById("sat-pct").style.color=col;
+  const ei=document.getElementById("sat-emoji");
+  if(ei)ei.textContent=(pct>60?"😊":pct>30?"😰":"💀")+" 患者満足度";
   if(satisfaction<=0&&!gameOver)triggerGameOver();
 }
 function calcGrade(){
@@ -775,7 +885,7 @@ function setupStage1(){
   beds=makeBeds();
   waitPatients=[
     {id:"w1",name:"田中 恵子",age:45,sex:"女性",pmh:"花粉症",         chief:"発熱・咽頭痛",   color:"green", HR:82,BP_sys:118,BP_dia:74,SpO2:99,GCS:15,RR:15,Temp:38.6,disease:"fever"},
-    {id:"w2",name:"山本 大輔",age:28,sex:"男性",pmh:"なし",           chief:"右足首捻挫・疼痛",color:"green", HR:76,BP_sys:122,BP_dia:78,SpO2:99,GCS:15,RR:16,Temp:36.7,disease:"fever"},
+    {id:"w2",name:"山本 大輔",age:28,sex:"男性",pmh:"なし",           chief:"右足首捻挫・疼痛",color:"green", HR:76,BP_sys:122,BP_dia:78,SpO2:99,GCS:15,RR:16,Temp:36.7,disease:"minor",noOrderNeeded:true},
     {id:"w3",name:"鈴木 光子",age:68,sex:"女性",pmh:"高血圧・高脂血症",chief:"めまい・頭痛",  color:"orange",HR:92,BP_sys:158,BP_dia:94,SpO2:97,GCS:15,RR:17,Temp:36.9,disease:"bp"},
   ];
   staffEnabled=false;satEnabled=true;callEnabled=false;
@@ -795,11 +905,14 @@ function resetGame(){
   ["score-disp","disp-count"].forEach(id=>document.getElementById(id).textContent="0");
   document.getElementById("sat-fill").style.cssText="width:100%;background:#22c55e;";
   document.getElementById("sat-pct").style.cssText="color:#22c55e;";document.getElementById("sat-pct").textContent="100%";
+  const _sei=document.getElementById("sat-emoji");if(_sei)_sei.textContent="😊 患者満足度";
   document.getElementById("shift-fill").style.width="100%";document.getElementById("shift-time").textContent="4:00";
   ["screen-go","screen-cl"].forEach(id=>document.getElementById(id).classList.remove("show"));
   document.getElementById("alert-bar").classList.remove("show");
   document.getElementById("call-overlay").classList.remove("active");
   document.getElementById("top-alert").style.display="none";
+  eventLog=[];const lb=document.getElementById('log-body');if(lb)lb.innerHTML='';
+  setTimeout(()=>logMsg('system','🏥 シフト開始 — 救急外来の担当医として業務を開始します'),100);
 }
 
 // ===== ステージ開始 =====
@@ -883,7 +996,14 @@ function gameLoop(){
     if(p.BP_sys<75||p.SpO2<90){changeSat(-2);critAlert=`${p.name} — BP${p.BP_sys}/SpO₂${p.SpO2}% 危険域！`;}
     if(p.color==="red"&&satEnabled)changeSat(-0.3);
   });
-  if(critAlert)showAlert(critAlert);
+  if(critAlert){
+    showAlert(critAlert);
+    logMsg('alert','🚨 '+critAlert);
+    if(Math.random()<0.33){
+      const _cns=staffState.filter(s=>!s.onBreak&&!s.absent&&s.role==='nurse');
+      if(_cns.length){const _cn=_cns[Math.floor(Math.random()*_cns.length)];logMsg('nurse',_cn.short+'「'+pickRandom(STAFF_SPEECH[_cn.id].critical)+'」');}
+    }
+  }
 
   if(currentStage==="stage1"){
     const allDone=beds.every(b=>!b.patient||b.patient.disposed)&&waitPatients.length===0;
@@ -980,7 +1100,7 @@ function renderWaitList(){
     card.draggable=true;
     card.innerHTML=`<div style="display:flex;align-items:center;"><span style="width:6px;height:6px;border-radius:50%;background:${TRIAGE_BDR[p.color]};display:inline-block;margin-right:3px;flex-shrink:0;"></span><span class="pt-name">${p.name}/${p.age}歳</span></div>
       <div class="pt-chief">${p.chief}</div>
-      <div class="pt-vitals"><span class="vbadge hr">HR${p.HR}</span><span class="vbadge bp">BP${p.BP_sys}</span><span class="vbadge spo2">SpO₂${p.SpO2}%</span></div>
+      <div class="pt-vitals">${waitVitals(p)}</div>
       <button class="assign-btn${isSel?" selected":""}" onclick="selectPatientForAssign('${p.id}')">${isSel?"✕ キャンセル":"▶ ベッドへ割り当てる"}</button>`;
     card.addEventListener("dragstart",e=>{dragPatient=p;card.classList.add("dragging");const g=document.getElementById("ghost");g.style.background=TRIAGE_BG[p.color]||"#0f2e1a";g.style.borderColor=TRIAGE_BDR[p.color]||"#22c55e";g.textContent=p.name+" — "+p.chief;g.style.display="block";e.dataTransfer.effectAllowed="move";});
     card.addEventListener("drag",e=>{if(e.clientX===0&&e.clientY===0)return;const g=document.getElementById("ghost");g.style.left=(e.clientX+14)+"px";g.style.top=(e.clientY-18)+"px";});
@@ -1002,15 +1122,60 @@ function renderStaffList(){
   });
 }
 
+function makeVitalHtml(p){
+  function vs(val,thr){for(const t of thr){if(val<=t.max)return t;}return thr[thr.length-1];}
+  const hrS=vs(p.HR,   [{max:54,icon:'🔴',label:'危険',c:'#ef4444'},{max:100,icon:'🟢',label:'正常',c:'#22c55e'},{max:119,icon:'🟡',label:'速め',c:'#eab308'},{max:999,icon:'🔴',label:'危険',c:'#ef4444'}]);
+  const bpS=vs(p.BP_sys,[{max:79,icon:'🔴',label:'危険',c:'#ef4444'},{max:89,icon:'🟠',label:'低め',c:'#f97316'},{max:139,icon:'🟢',label:'正常',c:'#22c55e'},{max:179,icon:'🟡',label:'高め',c:'#eab308'},{max:999,icon:'🔴',label:'危険',c:'#ef4444'}]);
+  const spS=vs(p.SpO2,  [{max:89,icon:'🔴',label:'危険',c:'#ef4444'},{max:94,icon:'🟠',label:'低め',c:'#f97316'},{max:999,icon:'🟢',label:'正常',c:'#22c55e'}]);
+  const gcS=vs(p.GCS,   [{max:8,icon:'🔴',label:'意識不明',c:'#ef4444'},{max:12,icon:'🟡',label:'意識低下',c:'#eab308'},{max:14,icon:'🟡',label:'やや低下',c:'#eab308'},{max:999,icon:'🟢',label:'清明',c:'#22c55e'}]);
+  const rrS=vs(p.RR,    [{max:9,icon:'🔴',label:'危険',c:'#ef4444'},{max:11,icon:'🟠',label:'遅め',c:'#f97316'},{max:20,icon:'🟢',label:'正常',c:'#22c55e'},{max:24,icon:'🟡',label:'速め',c:'#eab308'},{max:999,icon:'🔴',label:'危険',c:'#ef4444'}]);
+  const tmp=typeof p.Temp==='number'?p.Temp:parseFloat(p.Temp)||36.5;
+  const tpS=vs(Math.round(tmp*10),[{max:349,icon:'🔴',label:'低体温',c:'#ef4444'},{max:359,icon:'🟡',label:'低め',c:'#eab308'},{max:374,icon:'🟢',label:'正常',c:'#22c55e'},{max:384,icon:'🟡',label:'微熱',c:'#eab308'},{max:999,icon:'🔴',label:'発熱',c:'#ef4444'}]);
+  if(difficulty==='easy'){
+    return `<div class="vgrid">
+      <div class="vbox"><div class="vlbl">脈拍</div><div class="vval" style="color:${hrS.c};">${hrS.icon} ${hrS.label}</div></div>
+      <div class="vbox"><div class="vlbl">血圧</div><div class="vval" style="color:${bpS.c};">${bpS.icon} ${bpS.label}</div></div>
+      <div class="vbox"><div class="vlbl">酸素</div><div class="vval" style="color:${spS.c};">${spS.icon} ${spS.label}</div></div>
+      <div class="vbox"><div class="vlbl">意識</div><div class="vval" style="color:${gcS.c};">${gcS.icon} ${gcS.label}</div></div>
+      <div class="vbox"><div class="vlbl">呼吸</div><div class="vval" style="color:${rrS.c};">${rrS.icon} ${rrS.label}</div></div>
+      <div class="vbox"><div class="vlbl">体温</div><div class="vval" style="color:${tpS.c};">${tpS.icon} ${tpS.label}</div></div>
+    </div>`;
+  }
+  const aHR=p.HR>110||p.HR<55,aBP=p.BP_sys<90,aSp=p.SpO2<95;
+  if(difficulty==='normal'){
+    return `<div class="vgrid">
+      <div class="vbox ${aHR?'w':''}"><div class="vlbl">脈拍</div><div class="vval${aHR?' ab':''}"><span style="font-size:9px;">${hrS.icon}</span> ${p.HR}<span class="vunit"> bpm・${hrS.label}</span></div></div>
+      <div class="vbox ${aBP?'w':''}"><div class="vlbl">血圧</div><div class="vval${aBP?' ab':''}"><span style="font-size:9px;">${bpS.icon}</span> ${p.BP_sys}/${p.BP_dia}<span class="vunit"> mmHg・${bpS.label}</span></div></div>
+      <div class="vbox ${aSp?'w':''}"><div class="vlbl">酸素飽和度</div><div class="vval${aSp?' ab':''}"><span style="font-size:9px;">${spS.icon}</span> ${p.SpO2}<span class="vunit"> %・${spS.label}</span></div></div>
+      <div class="vbox"><div class="vlbl">意識</div><div class="vval" style="color:${gcS.c};"><span style="font-size:9px;">${gcS.icon}</span> ${gcS.label}<span class="vunit"> (GCS ${p.GCS})</span></div></div>
+      <div class="vbox"><div class="vlbl">呼吸数</div><div class="vval"><span style="font-size:9px;">${rrS.icon}</span> ${p.RR}<span class="vunit"> /min・${rrS.label}</span></div></div>
+      <div class="vbox"><div class="vlbl">体温</div><div class="vval"><span style="font-size:9px;">${tpS.icon}</span> ${tmp.toFixed(1)}<span class="vunit"> °C・${tpS.label}</span></div></div>
+    </div>`;
+  }
+  return `<div class="vgrid">
+    <div class="vbox ${aHR?'w':''}"><div class="vlbl">HR</div><div class="vval${aHR?' ab':''}">${p.HR}<span class="vunit">bpm</span></div></div>
+    <div class="vbox ${aBP?'w':''}"><div class="vlbl">BP</div><div class="vval${aBP?' ab':''}">${p.BP_sys}/${p.BP_dia}<span class="vunit">mmHg</span></div></div>
+    <div class="vbox ${aSp?'w':''}"><div class="vlbl">SpO₂</div><div class="vval${aSp?' ab':''}">${p.SpO2}<span class="vunit">%</span></div></div>
+    <div class="vbox"><div class="vlbl">GCS</div><div class="vval">${p.GCS}<span class="vunit">/15</span></div></div>
+    <div class="vbox"><div class="vlbl">RR</div><div class="vval">${p.RR}<span class="vunit">/min</span></div></div>
+    <div class="vbox"><div class="vlbl">体温</div><div class="vval">${tmp.toFixed(1)}<span class="vunit">°C</span></div></div>
+  </div>`;
+}
+
+function waitVitals(p){
+  if(difficulty==='hard') return `<span class="vbadge hr">HR${p.HR}</span><span class="vbadge bp">BP${p.BP_sys}</span><span class="vbadge spo2">SpO₂${p.SpO2}%</span>`;
+  if(difficulty==='normal') return `<span class="vbadge hr">脈${p.HR}</span><span class="vbadge bp">血圧${p.BP_sys}</span><span class="vbadge spo2">酸素${p.SpO2}%</span>`;
+  return '';
+}
+
 function renderDetail(){
   const bed=beds.find(b=>b.id===selectedBedId);
   const body=document.getElementById("rp-body"),title=document.getElementById("rp-title");
   if(!bed||!bed.patient){title.textContent="患者詳細";body.innerHTML=`<div class="no-sel"><i class="ti ti-user-search"></i>ベッドを選択するか<br>患者を割り当ててください</div>`;return;}
   const p=bed.patient;title.textContent=bed.label;
-  const aHR=p.HR>110||p.HR<55,aBP=p.BP_sys<90,aSp=p.SpO2<95;
   const pendingIds=new Set(p.orders.filter(o=>o.status==="pending").map(o=>o.id));
   const doneIds=new Set(p.orders.filter(o=>o.status==="done").map(o=>o.id));
-  const doneCnt=doneIds.size,canDispose=doneCnt>=1;
+  const doneCnt=doneIds.size,canDispose=doneCnt>=1||!!p.noOrderNeeded;
   const sigs=Object.values(p.signals||{});
   const redCnt=sigs.filter(s=>s.color==="red").length,yelCnt=sigs.filter(s=>s.color==="yellow").length;
   let rec=redCnt>=2?"icu":redCnt===1||yelCnt>=2?"admit":"discharge";
@@ -1047,21 +1212,15 @@ function renderDetail(){
   const dispHTML=p.disposed
     ?`<div class="disp-done"><i class="ti ti-circle-check"></i>転帰決定済み</div>`
     :`<div class="disp-sec"><div class="disp-sec-title">転帰の決定${canDispose?'<span style="font-size:9px;color:#22c55e;margin-left:6px;">✓ 解放済み</span>':'<span style="font-size:9px;color:#334155;margin-left:6px;">検査1件完了後に解放</span>'}</div>
-    <div class="disp-opts">${dispOpts.map(opt=>{const isRec=canDispose&&rec===opt.id;return `<button class="disp-btn${isRec?" rec "+opt.id:""}" ${canDispose&&!p.disposed?`onclick="openDispModal('${bed.id}','${opt.id}')"`:"disabled"}><i class="ti ${opt.icon}" style="font-size:14px;color:${opt.color};"></i><span style="color:#f1f5f9;">${opt.label}</span>${isRec?`<span class="rec-badge" style="${opt.recBg}">推奨</span>`:""}</button>`;}).join("")}</div></div>`;
+    <div class="disp-opts">${dispOpts.map(opt=>{const isRec=canDispose&&rec===opt.id;return `<button class="disp-btn${isRec?" rec "+opt.id:""}" ${canDispose&&!p.disposed?`onclick="dispTargetBedId='${bed.id}';applyDisp('${opt.id}')"`:"disabled"}><i class="ti ${opt.icon}" style="font-size:14px;color:${opt.color};"></i><span style="color:#f1f5f9;">${opt.label}</span>${isRec?`<span class="rec-badge" style="${opt.recBg}">推奨</span>`:""}</button>`;}).join("")}</div></div>`;
 
   body.innerHTML=`
     <div class="det-sec">
       <div class="det-name">${p.name}${p.ivOrdered?'<span style="font-size:8px;color:#6ee7b7;margin-left:6px;">輸液中</span>':""}</div>
       <div class="det-age">${p.age}歳 ${p.sex}・${p.pmh}</div>
       <div class="chief-badge" style="background:${TRIAGE_BG[p.color]||"#0f2e1a"};border:0.5px solid ${TRIAGE_BDR[p.color]||"#22c55e"};color:${TRIAGE_BDR[p.color]||"#22c55e"};">${p.chief}</div>
-      <div class="vgrid">
-        <div class="vbox ${aHR?"w":""}"><div class="vlbl">HR</div><div class="vval${aHR?" ab":""}">${p.HR}<span class="vunit">bpm</span></div></div>
-        <div class="vbox ${aBP?"w":""}"><div class="vlbl">BP</div><div class="vval${aBP?" ab":""}">${p.BP_sys}/${p.BP_dia}<span class="vunit">mmHg</span></div></div>
-        <div class="vbox ${aSp?"w":""}"><div class="vlbl">SpO₂</div><div class="vval${aSp?" ab":""}">${p.SpO2}<span class="vunit">%</span></div></div>
-        <div class="vbox"><div class="vlbl">GCS</div><div class="vval">${p.GCS}<span class="vunit">/15</span></div></div>
-        <div class="vbox"><div class="vlbl">RR</div><div class="vval">${p.RR}<span class="vunit">/min</span></div></div>
-        <div class="vbox"><div class="vlbl">体温</div><div class="vval">${typeof p.Temp==="number"?p.Temp.toFixed(1):p.Temp}<span class="vunit">°C</span></div></div>
-      </div>
+      ${p.noOrderNeeded&&difficulty==='easy'?'<div style="font-size:9px;color:#86efac;margin-top:4px;padding:3px 6px;background:#0f2e1a;border-radius:4px;">💡 診察のみで帰宅できる可能性があります</div>':''}
+      ${makeVitalHtml(p)}
     </div>
     ${staffEnabled?`<div class="sa-sec"><div class="sa-title">スタッフ配置 <span style="font-size:8px;color:#475569;font-weight:normal;">— ${assigned.length>0?"処置速度 ×"+speedMult.toFixed(1):"配置で処置が速くなります"}</span></div><div class="sa-list">${assignedHTML}</div>${addBtns}</div>`:""}
     <div class="ord-sec"><div class="ord-sec-title">検査・処置オーダー</div><div class="ord-grid">${ORDERS.map(obtn).join("")}</div></div>
@@ -1096,6 +1255,9 @@ function assignPatient(bedId){
   else if(uu)showToast("⚠ 重症患者を診察室へ（−50pt）","warn");
   else showToast(`${patient.name}を「${bed.label}」に割り当てました`);
   checkTutEvent("assigned");
+  const _ps=PATIENT_SPEECH[patient.disease]||PATIENT_SPEECH.fever;
+  setTimeout(()=>logMsg('patient','👤 '+patient.name+'「'+pickRandom(_ps.assign)+'」'),800);
+  if(staffEnabled){const _avns=staffState.filter(s=>!s.onBreak&&!s.absent);if(_avns.length){const _n=_avns[Math.floor(Math.random()*_avns.length)];setTimeout(()=>logMsg('nurse',_n.short+'「'+pickRandom(STAFF_SPEECH[_n.id].assign)+'」'),1600);}}
 }
 
 function placeOrder(bedId,orderId){
@@ -1118,6 +1280,8 @@ function placeOrder(bedId,orderId){
     score+=10;document.getElementById("score-disp").textContent=score.toLocaleString();
     if(selectedBedId===bedId)renderDetail();
     checkTutEvent("ordered");
+    logMsg('event','✅ '+bed.patient.name+' — '+def.label+' 完了 '+sig.text);
+    if(orderId==='iv'){const _ps2=PATIENT_SPEECH[bed.patient.disease]||PATIENT_SPEECH.fever;setTimeout(()=>{if(bed.patient)logMsg('patient','👤 '+bed.patient.name+'「'+pickRandom(_ps2.iv_done)+'」');},600);}
   },Math.round(def.time/speedMult)*1000);
 }
 
@@ -1133,15 +1297,29 @@ function applyDisp(type){
   const p=bed.patient;
   const ds=p.disease&&DISEASE_SIG[p.disease];
   const isCorrect=ds?type===ds.rec:(type==="discharge");
-  let pts=isCorrect?150:40;pts+=Math.round((p.urgency||100)*0.3);
+  const doneOrderCnt=p.orders.filter(o=>o.status==="done").length;
+  let pts,effectivelyCorrect;
+  if(p.noOrderNeeded){
+    effectivelyCorrect=type==="discharge";
+    pts=effectivelyCorrect?(doneOrderCnt===0?200:120):20;
+  } else {
+    effectivelyCorrect=isCorrect;
+    pts=isCorrect?150:40;
+  }
+  pts+=Math.round((p.urgency||100)*0.3);
   score+=pts;dispCountVal++;
-  changeSat(isCorrect?5:-10);
+  changeSat(effectivelyCorrect?5:-10);
   document.getElementById("score-disp").textContent=score.toLocaleString();
   document.getElementById("disp-count").textContent=dispCountVal;
   if(staffEnabled)staffState.forEach(st=>{if(st.assignedBedId===dispTargetBedId)st.assignedBedId=null;});
   p.disposed=true;
   const labels={admit:"一般病棟入院",icu:"ICU転送",discharge:"帰宅"};
-  showToast(`${p.name} — ${labels[type]}（+${pts}pt）${isCorrect?"✓":"⚠ 転帰を再確認"}`);
+  const bonusNote=p.noOrderNeeded&&type==="discharge"&&doneOrderCnt===0?" 🎯 処置なし帰宅":""
+  showToast(`${p.name} — ${labels[type]}（+${pts}pt）${effectivelyCorrect?"✓":"⚠ 転帰を再確認"}${bonusNote}`);
+  logMsg('system','📋 '+p.name+' — '+labels[type]+(effectivelyCorrect?' ✓':' ⚠')+bonusNote);
+  const _ps3=PATIENT_SPEECH[p.disease]||PATIENT_SPEECH.fever;
+  const _dspeech=_ps3.disposed&&_ps3.disposed[type];
+  if(_dspeech)setTimeout(()=>logMsg('patient','👤 '+p.name+'「'+_dspeech+'」'),800);
   selectedBedId=dispTargetBedId;renderBeds();renderDetail();checkTutEvent("disposed");
 }
 
@@ -1199,7 +1377,7 @@ function triggerCall(){
 }
 function acceptCall(){
   clearInterval(callTimer);document.getElementById("call-overlay").classList.remove("active");document.getElementById("top-alert").style.display="none";
-  if(pendingCall){waitPatients.push({...pendingCall,id:"w"+Date.now()});renderWaitList();showToast(`${pendingCall.name}が到着 — ベッドへ割り当ててください`,"warn");score+=50;document.getElementById("score-disp").textContent=score.toLocaleString();}
+  if(pendingCall){waitPatients.push({...pendingCall,id:"w"+Date.now()});renderWaitList();showToast(`${pendingCall.name}が到着 — ベッドへ割り当ててください`,"warn");score+=50;document.getElementById("score-disp").textContent=score.toLocaleString();logMsg('system','🚑 搬送承諾 — '+pendingCall.name+' / '+pendingCall.chief);}
   pendingCall=null;if(callEnabled)setTimeout(triggerCall,15000+Math.random()*10000);
 }
 function declineCall(){

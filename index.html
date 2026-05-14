@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CODE RED ER — 救急外来シミュレーション</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+<!-- タイトル画面 -->
+<div id="title-screen">
+  <div class="title-logo">🚨 CODE RED ER</div>
+  <div class="title-sub">救急外来シミュレーション</div>
+  <div class="diff-select">
+    <div class="diff-label">難易度を選択</div>
+    <div class="diff-btns">
+      <button class="diff-btn easy active" onclick="setDifficulty('easy')">
+        <div class="diff-icon">🟢</div>
+        <div class="diff-name">かんたん</div>
+        <div class="diff-desc">色と直感で判断。医療用語なし</div>
+      </button>
+      <button class="diff-btn normal" onclick="setDifficulty('normal')">
+        <div class="diff-icon">🟡</div>
+        <div class="diff-name">ふつう</div>
+        <div class="diff-desc">簡単な説明付き</div>
+      </button>
+      <button class="diff-btn hard" onclick="setDifficulty('hard')">
+        <div class="diff-icon">🔴</div>
+        <div class="diff-name">むずかしい</div>
+        <div class="diff-desc">バイタル数値・医療用語フル</div>
+      </button>
+    </div>
+  </div>
+  <div class="stage-list">
+    <div class="stage-card tutorial" onclick="startStage('tutorial')">
+      <div class="stage-num" style="color:#22c55e;">0</div>
+      <div class="stage-info">
+        <div class="stage-name">チュートリアル — 最初の一歩</div>
+        <div class="stage-desc">操作を学ぶ。患者1名・時間制限なし</div>
+        <div class="stage-tags"><span class="stag stag-easy">難易度 ★☆☆</span><span class="stag stag-info">患者 1名</span><span class="stag stag-info">時間制限なし</span></div>
+      </div>
+      <div><div style="font-size:20px;font-weight:800;color:#22c55e;" id="grade-tut">—</div></div>
+    </div>
+    <div class="stage-card s1" id="card-s1" onclick="tryStage('stage1')">
+      <div class="stage-num" style="color:#60a5fa;">1</div>
+      <div class="stage-info">
+        <div class="stage-name">初日のシフト</div>
+        <div class="stage-desc">軽症中心。オーダーとdispositionの練習</div>
+        <div class="stage-tags"><span class="stag stag-easy">難易度 ★☆☆</span><span class="stag stag-info">患者 3名</span><span class="stag stag-info">入電なし</span></div>
+      </div>
+      <div id="right-s1"><div class="lock-icon">🔒</div></div>
+    </div>
+    <div class="stage-card s2 locked">
+      <div class="stage-num" style="color:#f97316;">2</div>
+      <div class="stage-info">
+        <div class="stage-name">救急の基本</div>
+        <div class="stage-desc">重症患者が登場。入電あり</div>
+        <div class="stage-tags"><span class="stag stag-med">難易度 ★★☆</span><span class="stag stag-info">患者 4名</span><span class="stag stag-info">入電あり</span></div>
+      </div>
+      <div><div class="lock-icon">🔒</div></div>
+    </div>
+    <div class="stage-card s3 locked">
+      <div class="stage-num" style="color:#ef4444;">3</div>
+      <div class="stage-info">
+        <div class="stage-name">スタッフ管理</div>
+        <div class="stage-desc">疲労システム有効。休憩判断が鍵</div>
+        <div class="stage-tags"><span class="stag stag-hard">難易度 ★★★</span><span class="stag stag-info">患者 5名</span><span class="stag stag-info">疲労あり</span></div>
+      </div>
+      <div><div class="lock-icon">🔒</div></div>
+    </div>
+  </div>
+  <div class="title-note">チュートリアルをクリアするとステージ1が解放されます</div>
+</div>
+
+<!-- ゲーム画面 -->
+<div id="game-screen">
+  <div class="alert-bar" id="alert-bar"><i class="ti ti-alert-triangle"></i><span id="alert-msg"></span></div>
+  <div class="top-bar">
+    <span class="top-brand">🚨 CODE RED ER</span>
+    <div class="top-stat"><span class="lbl">ステージ</span><span class="val" id="stage-lbl">Tutorial</span></div>
+    <div class="top-stat"><span class="lbl">重症</span><span class="val" id="stat-c">0/3</span></div>
+    <div class="top-stat"><span class="lbl">診察室</span><span class="val" id="stat-e">0/5</span></div>
+    <div class="top-stat"><span class="lbl">得点</span><span class="val grn" id="score-disp">0</span></div>
+    <div class="top-stat"><span class="lbl">転帰</span><span class="val grn" id="disp-count">0</span></div>
+    <div class="sat-wrap">
+      <div class="sat-lbl-row">
+        <span class="sat-lbl" id="sat-emoji">😊 患者満足度</span>
+        <span class="sat-pct" id="sat-pct" style="color:#22c55e;">100%</span>
+      </div>
+      <div class="sat-track"><div class="sat-fill" id="sat-fill" style="width:100%;background:#22c55e;"></div></div>
+    </div>
+    <div class="shift-wrap" id="shift-wrap" style="display:none;">
+      <span style="font-size:9px;color:#64748b;">⏱</span>
+      <div class="shift-track"><div class="shift-fill" id="shift-fill" style="width:100%;"></div></div>
+      <span class="shift-time" id="shift-time">4:00</span>
+    </div>
+    <span class="alert-badge" id="top-alert"><i class="ti ti-alert-triangle"></i> 入電中</span>
+    <span class="timer-disp" id="clock">08:00</span>
+    <button class="pause-btn" id="pause-btn" onclick="togglePause()">⏸ 一時停止</button>
+    <button class="back-btn" onclick="backToTitle()">← タイトル</button>
+  </div>
+
+  <div class="body-wrap">
+    <div class="left-panel">
+      <div class="panel-hdr">待機患者 <span style="color:#ef4444;" id="wait-count">0</span></div>
+      <div class="wait-area">
+        <div id="wait-list"></div>
+        <div class="drag-hint" id="drag-hint" style="display:none;"><i class="ti ti-drag-drop" style="font-size:13px;display:block;margin-bottom:2px;"></i>空きベッドへドラッグ</div>
+      </div>
+      <div class="staff-panel" id="staff-panel" style="display:none;">
+        <div class="staff-panel-hdr"><span>スタッフ</span><span style="font-size:8px;color:#475569;">クリックで操作</span></div>
+        <div id="staff-list"></div>
+      </div>
+    </div>
+
+    <div class="er-area" id="er-area">
+      <div>
+        <div class="zone-lbl"><i class="ti ti-alert-triangle" style="color:#ef4444;font-size:9px;margin-right:3px;"></i>重症ベッド（3床）</div>
+        <div class="beds-row" id="critical-beds"></div>
+      </div>
+      <div class="z-div"></div>
+      <div>
+        <div class="zone-lbl"><i class="ti ti-stethoscope" style="color:#60a5fa;font-size:9px;margin-right:3px;"></i>診察室（5室）</div>
+        <div class="beds-row-exam" id="exam-beds"></div>
+      </div>
+      <div class="spotlight" id="spotlight"><div class="sp-ring" id="sp-ring"></div></div>
+      <div class="spop" id="spop" style="display:none;">
+        <button class="spop-close" onclick="closeSpop()">✕</button>
+        <div class="spop-name" id="spop-name"></div>
+        <div class="spop-role" id="spop-role"></div>
+        <div class="spop-trait" id="spop-trait"></div>
+        <div class="spop-ft-lbl"><span>疲労度</span><span id="spop-pct"></span></div>
+        <div class="spop-ft-track"><div class="spop-ft-fill" id="spop-fill"></div></div>
+        <div class="spop-status" id="spop-status"></div>
+        <button class="spop-btn" id="spop-btn"></button>
+      </div>
+    </div>
+
+    <div class="right-panel" id="right-panel">
+      <div class="rp-hdr" onclick="togglePanel()">
+        <span class="rp-hdr-lbl" id="rp-title">患者詳細</span>
+        <i class="rp-toggle ti ti-chevron-right"></i>
+      </div>
+      <div class="rp-body" id="rp-body">
+        <div class="no-sel"><i class="ti ti-user-search"></i>ベッドを選択するか<br>患者を割り当ててください</div>
+      </div>
+      <div class="col-tab" onclick="togglePanel()">患者詳細</div>
+    </div>
+  </div>
+
+  <div class="log-panel" id="log-panel">
+    <div class="log-panel-hdr">💬 ログ</div>
+    <div class="log-body" id="log-body"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="tut-nav" id="tut-nav">
+    <div class="tut-icon" id="tut-icon">💡</div>
+    <div class="tut-content">
+      <div class="tut-step" id="tut-step"></div>
+      <div class="tut-text" id="tut-text"></div>
+      <div class="tut-hint" id="tut-hint"></div>
+    </div>
+    <div class="tut-acts">
+      <button class="tut-next" id="tut-next" onclick="nextTutStep()">次へ →</button>
+      <button class="tut-skip" onclick="skipTut()">スキップ</button>
+    </div>
+  </div>
+
+  <div class="end-screen go" id="screen-go">
+    <div class="end-card go">
+      <div class="end-hdr"><div class="end-icon">💀</div><div class="end-title">GAME OVER</div><div class="end-sub">患者満足度がゼロになりました</div></div>
+      <div class="end-stats">
+        <div class="end-stat"><div class="end-stat-val" id="go-score">0</div><div class="end-stat-lbl">得点</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="go-disp">0</div><div class="end-stat-lbl">転帰数</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="go-time">0:00</div><div class="end-stat-lbl">経過時間</div></div>
+      </div>
+      <div class="end-grade"><div class="gbadge gD" id="go-grade">D</div><div class="gcomment" id="go-comment"></div></div>
+      <div class="end-btns"><button class="btn-go-retry" onclick="location.reload()">もう一度</button><button class="btn-retry" onclick="backToTitle()">タイトルへ</button></div>
+    </div>
+  </div>
+  <div class="end-screen cl" id="screen-cl">
+    <div class="end-card cl">
+      <div class="end-hdr"><div class="end-icon">🏥</div><div class="end-title" id="cl-title">クリア！</div><div class="end-sub" id="cl-sub"></div></div>
+      <div class="end-stats">
+        <div class="end-stat"><div class="end-stat-val" id="cl-score">0</div><div class="end-stat-lbl">得点</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="cl-disp">0</div><div class="end-stat-lbl">転帰数</div></div>
+        <div class="end-stat"><div class="end-stat-val" id="cl-sat">100%</div><div class="end-stat-lbl">最終満足度</div></div>
+      </div>
+      <div class="end-grade"><div class="gbadge gA" id="cl-grade">A</div><div class="gcomment" id="cl-comment"></div></div>
+      <div class="end-btns"><button class="btn-retry" onclick="backToTitle()">タイトルへ</button><button class="btn-next" id="btn-next-stage" onclick="backToTitle()">次のステージへ</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 入電モーダル -->
+<div class="call-overlay" id="call-overlay">
+  <div class="call-modal">
+    <div class="call-hdr">
+      <div class="call-ring"><i class="ti ti-phone" style="color:#fff;font-size:16px;"></i></div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#fca5a5;" id="call-unit">救急隊より入電</div>
+        <div style="font-size:11px;color:#fca5a5;opacity:0.7;" id="call-station"></div>
+      </div>
+    </div>
+    <div class="call-body">
+      <div class="call-row"><span class="call-key">患者</span><span class="call-val" id="c-patient"></span></div>
+      <div class="call-row"><span class="call-key">主訴</span><span class="call-val red" id="c-chief"></span></div>
+      <div class="call-row"><span class="call-key">バイタル</span><span class="call-val" id="c-vitals"></span></div>
+      <div class="call-div"></div>
+      <div class="call-row"><span class="call-key">緊急度</span><span class="call-val" id="c-triage"></span></div>
+      <div class="call-row"><span class="call-key">現場</span><span class="call-val" id="c-scene"></span></div>
+      <div class="call-eta-box">
+        <i class="ti ti-ambulance" style="color:#f97316;font-size:22px;flex-shrink:0;"></i>
+        <div><div class="call-eta-val" id="c-eta">—</div><div class="call-eta-unit">分後に到着予定</div></div>
+        <div class="call-eta-dist" id="c-dist"></div>
+      </div>
+    </div>
+    <div class="call-acts">
+      <button class="btn-decline" onclick="declineCall()">受け入れ不可</button>
+      <button class="btn-accept" onclick="acceptCall()">🚑 受け入れ承諾</button>
+    </div>
+  </div>
+</div>
+
+<!-- Disposition確認モーダル -->
+<div class="disp-modal-bg" id="disp-modal-bg">
+  <div class="disp-modal">
+    <div class="dm-hdr" id="dm-title">転帰を決定してください</div>
+    <div class="dm-opts">
+      <div class="dm-opt icu" onclick="applyDisp('icu')"><i class="ti ti-heart-rate-monitor"></i><div><div class="dm-opt-label">ICU 転送</div><div class="dm-opt-sub">集中管理が必要</div></div></div>
+      <div class="dm-opt admit" onclick="applyDisp('admit')"><i class="ti ti-building-hospital"></i><div><div class="dm-opt-label">一般病棟 入院</div><div class="dm-opt-sub">経過観察が必要</div></div></div>
+      <div class="dm-opt discharge" onclick="applyDisp('discharge')"><i class="ti ti-home"></i><div><div class="dm-opt-label">帰宅</div><div class="dm-opt-sub">外来フォロー可能</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="ghost-card" id="ghost"></div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

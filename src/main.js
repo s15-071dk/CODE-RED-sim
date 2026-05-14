@@ -1,0 +1,243 @@
+import { state } from './state.js';
+import { STAFF_DEFS, STAFF_SPEECH, fatigueState } from './data/staff.js';
+import { setupTutorial, setupStage1 } from './data/stages.js';
+import { renderBeds, renderWaitList, renderDetail, renderStaffList } from './ui/render.js';
+import { showToast, showAlert, logMsg, renderLog } from './ui/notifications.js';
+import { getUrgencyColor, changeSat, calcGrade, triggerGameOver, triggerClear } from './systems/scoring.js';
+import { showTutStep, nextTutStep, skipTut, checkTutEvent, completeTutorial } from './systems/tutorial.js';
+import { placeOrder } from './systems/orders.js';
+import { openDispModal, applyDisp } from './systems/disposition.js';
+import { triggerCall, acceptCall, declineCall } from './systems/ambulance.js';
+import { openSpop, closeSpop, assignStaff, removeStaff } from './ui/modals.js';
+import { selectPatientForAssign, assignPatient } from './ui/dragDrop.js';
+import { pickRandom } from './utils/random.js';
+
+// tutorial.js から completeTutorial が window._triggerClear を使うため公開
+window._triggerClear = triggerClear;
+
+// ===== 難易度 =====
+function setDifficulty(d) {
+  state.difficulty = d;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.diff-btn.' + d).classList.add('active');
+}
+
+// ===== ゲームリセット =====
+export function resetGame() {
+  state.score         = 0;
+  state.dispCountVal  = 0;
+  state.satisfaction  = 100;
+  state.shiftElapsed  = 0;
+  state.clockMin      = 8;
+  state.clockSec      = 0;
+  state.selectedBedId = null;
+  state.dragPatient   = null;
+  state.panelOpen     = true;
+  state.gameRunning   = true;
+  state.gameOver      = false;
+  state.gameClear     = false;
+  state.gamePaused    = false;
+  state.tutStepIdx    = 0;
+
+  if (state.mainLoop)  { clearInterval(state.mainLoop);  state.mainLoop  = null; }
+  if (state.callTimer) { clearInterval(state.callTimer); state.callTimer = null; }
+
+  state.staffState = STAFF_DEFS.map(s => ({ ...s, fatigue: 0, onBreak: false, assignedBedId: null, absent: false }));
+
+  ["score-disp", "disp-count"].forEach(id => document.getElementById(id).textContent = "0");
+  document.getElementById("sat-fill").style.cssText = "width:100%;background:#22c55e;";
+  document.getElementById("sat-pct").style.cssText  = "color:#22c55e;";
+  document.getElementById("sat-pct").textContent    = "100%";
+  const _sei = document.getElementById("sat-emoji");
+  if (_sei) _sei.textContent = "😊 患者満足度";
+  document.getElementById("shift-fill").style.width    = "100%";
+  document.getElementById("shift-time").textContent    = "4:00";
+
+  ["screen-go", "screen-cl"].forEach(id => document.getElementById(id).classList.remove("show"));
+  document.getElementById("alert-bar").classList.remove("show");
+  document.getElementById("call-overlay").classList.remove("active");
+  document.getElementById("top-alert").style.display = "none";
+
+  state.eventLog = [];
+  const lb = document.getElementById('log-body');
+  if (lb) lb.innerHTML = '';
+  setTimeout(() => logMsg('system', '🏥 シフト開始 — 救急外来の担当医として業務を開始します'), 100);
+}
+
+// ===== ステージ開始 =====
+export function startStage(stageName) {
+  state.currentStage = stageName;
+  resetGame();
+  document.getElementById("title-screen").style.display = "none";
+  document.getElementById("game-screen").style.display  = "flex";
+
+  if (stageName === "tutorial") {
+    setupTutorial();
+    showTutStep(0);
+  } else if (stageName === "stage1") {
+    setupStage1();
+  }
+
+  renderBeds();
+  renderWaitList();
+  renderDetail();
+  state.mainLoop = setInterval(gameLoop, 2000);
+  if (state.callEnabled) setTimeout(triggerCall, 6000);
+}
+
+export function tryStage(stageName) {
+  if (stageName === "stage1" && !state.progress.tutDone) {
+    showToast("先にチュートリアルをクリアしてください", "warn");
+    return;
+  }
+  startStage(stageName);
+}
+
+export function backToTitle() {
+  if (state.mainLoop)  { clearInterval(state.mainLoop);  state.mainLoop  = null; }
+  if (state.callTimer) { clearInterval(state.callTimer); state.callTimer = null; }
+  document.getElementById("game-screen").style.display  = "none";
+  document.getElementById("title-screen").style.display = "flex";
+  ["screen-go", "screen-cl"].forEach(id => document.getElementById(id).classList.remove("show"));
+  document.getElementById("call-overlay").classList.remove("active");
+  state.currentStage = null;
+  updateUnlocks();
+}
+
+export function updateUnlocks() {
+  if (state.progress.tutDone) {
+    document.getElementById("card-s1").classList.remove("locked");
+    document.getElementById("right-s1").innerHTML = `<div style="font-size:20px;font-weight:800;color:#60a5fa;">→</div>`;
+    document.getElementById("grade-tut").textContent = "✓";
+  }
+}
+
+export function togglePause() {
+  if (!state.gameRunning) return;
+  state.gamePaused = !state.gamePaused;
+  const btn = document.getElementById("pause-btn");
+  btn.textContent = state.gamePaused ? "▶ 再開" : "⏸ 一時停止";
+  btn.classList.toggle("paused", state.gamePaused);
+  if (state.gamePaused) showToast("⏸ 一時停止中", "warn");
+  else                  showToast("▶ 再開しました");
+}
+
+function togglePanel() {
+  state.panelOpen = !state.panelOpen;
+  document.getElementById("right-panel").classList.toggle("collapsed", !state.panelOpen);
+}
+
+// ===== インシデント =====
+function triggerIncident(staff, bed) {
+  if (!bed.patient) return;
+  changeSat(-8);
+  state.score = Math.max(0, state.score - 30);
+  document.getElementById("score-disp").textContent = state.score.toLocaleString();
+  showAlert(`⚠ インシデント！${staff.short}（${staff.roleLabel}）がミス（−30pt）`);
+  showToast(`${staff.short}を休憩させてください`, "err");
+}
+
+// ===== メインループ =====
+export function gameLoop() {
+  if (!state.gameRunning || state.gamePaused) return;
+  state.shiftElapsed += 2;
+  state.clockSec += 2;
+  if (state.clockSec >= 60) { state.clockSec -= 60; state.clockMin++; }
+  if (state.clockMin >= 24)  state.clockMin = 0;
+  document.getElementById("clock").textContent =
+    String(state.clockMin).padStart(2, "0") + ":" + String(state.clockSec).padStart(2, "0");
+
+  if (state.satEnabled) {
+    const SHIFT = 240, rem = Math.max(0, SHIFT - state.shiftElapsed);
+    document.getElementById("shift-fill").style.width = (rem / SHIFT * 100) + "%";
+    const m = Math.floor(rem / 60), s = rem % 60;
+    document.getElementById("shift-time").textContent = m + ":" + (s < 10 ? "0" + s : s);
+    if (state.shiftElapsed >= SHIFT) { triggerClear("シフト完了！"); return; }
+  }
+
+  if (state.staffEnabled) {
+    state.staffState.forEach(st => {
+      if (st.absent) return;
+      if (st.onBreak) {
+        st.fatigue = Math.max(0, st.fatigue - 3.0 * st.recoveryRate);
+        if (st.fatigue <= 0) st.onBreak = false;
+      } else if (st.assignedBedId) {
+        const bed   = state.beds.find(b => b.id === st.assignedBedId);
+        const heavy = bed && bed.patient && bed.patient.color === "red";
+        st.fatigue  = Math.min(100, st.fatigue + 1.8 * st.fatigueRate * (heavy ? 1.5 : 1));
+        const fs    = fatigueState(st.fatigue);
+        if (fs.incidentChance > 0 && Math.random() < fs.incidentChance && bed && bed.patient && !bed.patient.disposed) {
+          triggerIncident(st, bed);
+        }
+      }
+    });
+    renderStaffList();
+  }
+
+  let critAlert = null;
+  state.beds.forEach(bed => {
+    if (!bed.patient || bed.patient.disposed) return;
+    const p  = bed.patient;
+    const dr = v => +(v + (Math.random() - 0.5) * 0.4).toFixed(1);
+    const iv = p.ivOrdered ? 0.5 : 1;
+    p.HR    = Math.min(180, Math.max(30,  Math.round(p.HR    + dr(({ red: 2,    orange: 1,   yellow: 0, green: 0 }[p.color] || 0) * iv))));
+    p.BP_sys= Math.min(200, Math.max(50,  Math.round(p.BP_sys+ dr(({ red: -2,   orange: -1,  yellow: 0, green: 0 }[p.color] || 0) * iv))));
+    p.SpO2  = Math.min(100, Math.max(70,  Math.round(p.SpO2  + dr(({ red: -0.3, orange: -0.1,yellow: 0, green: 0 }[p.color] || 0) * iv))));
+    if (p.BP_sys < 75 || p.SpO2 < 90) {
+      changeSat(-2);
+      critAlert = `${p.name} — BP${p.BP_sys}/SpO₂${p.SpO2}% 危険域！`;
+    }
+    if (p.color === "red" && state.satEnabled) changeSat(-0.3);
+  });
+
+  if (critAlert) {
+    showAlert(critAlert);
+    logMsg('alert', '🚨 ' + critAlert);
+    if (Math.random() < 0.33) {
+      const _cns = state.staffState.filter(s => !s.onBreak && !s.absent && s.role === 'nurse');
+      if (_cns.length) {
+        const _cn = _cns[Math.floor(Math.random() * _cns.length)];
+        logMsg('nurse', _cn.short + '「' + pickRandom(STAFF_SPEECH[_cn.id].critical) + '」');
+      }
+    }
+  }
+
+  if (state.currentStage === "stage1") {
+    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0;
+    if (allDone) triggerClear("ステージ1 クリア！", "全患者の転帰を決定しました");
+  }
+
+  renderBeds();
+  if (state.selectedBedId) renderDetail();
+}
+
+// ===== 初期化 =====
+updateUnlocks();
+
+// ===== window への公開 =====
+Object.assign(window, {
+  startStage,
+  tryStage,
+  backToTitle,
+  togglePause,
+  togglePanel,
+  setDifficulty,
+  updateUnlocks,
+  selectPatientForAssign,
+  assignPatient,
+  placeOrder,
+  applyDisp,
+  openDispModal,
+  openSpop,
+  closeSpop,
+  assignStaff,
+  removeStaff,
+  acceptCall,
+  declineCall,
+  nextTutStep,
+  skipTut,
+  checkTutEvent,
+  // tutorial.js 内から dispTargetBedId を直接参照する onclick 文字列用
+  get dispTargetBedId() { return state.dispTargetBedId; },
+  set dispTargetBedId(v) { state.dispTargetBedId = v; },
+});
