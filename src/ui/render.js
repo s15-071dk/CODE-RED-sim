@@ -193,7 +193,8 @@ export function renderDetail() {
   const pendingIds = new Set(p.orders.filter(o => o.status === "pending").map(o => o.id));
   const doneIds    = new Set(p.orders.filter(o => o.status === "done").map(o => o.id));
   const doneCnt    = doneIds.size;
-  const canDispose = doneCnt >= 1 || !!p.noOrderNeeded;
+  // 発注済み（pending含む）が1件以上あれば転帰を解放。処置結果を待たずに臨床判断できる設計。
+  const canDispose = doneCnt >= 1 || pendingIds.size >= 1 || !!p.noOrderNeeded;
 
   const sigs    = Object.values(p.signals || {});
   const redCnt  = sigs.filter(s => s.color === "red").length;
