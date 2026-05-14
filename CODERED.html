@@ -33,6 +33,12 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .stag-info{background:#1e2736;color:#64748b;}
 .lock-icon{font-size:20px;color:#334155;}
 .title-note{margin-top:20px;font-size:10px;color:#334155;}
+/* ===== 患者割り当てボタン ===== */
+.assign-btn{width:100%;margin-top:5px;padding:4px 0;border-radius:4px;border:0.5px solid #3b82f6;background:#1a2744;color:#60a5fa;font-size:9px;font-weight:600;cursor:pointer;letter-spacing:0.5px;}
+.assign-btn:hover{background:#1e3a6e;}
+.assign-btn.selected{border-color:#f97316;background:#2d1f0a;color:#fb923c;}
+.bed-wrap.assign-target .drop-ring{display:block!important;}
+.bed-wrap.assign-target{cursor:pointer;}
 
 /* ===== 難易度選択 ===== */
 .diff-select{width:100%;max-width:420px;margin-bottom:24px;}
@@ -628,7 +634,7 @@ function setDifficulty(d){
 let currentStage=null,tutStepIdx=0;
 let score=0,dispCountVal=0,satisfaction=100,shiftElapsed=0;
 let clockMin=8,clockSec=0;
-let beds=[],waitPatients=[],selectedBedId=null,dragPatient=null,callTimer=null;
+let beds=[],waitPatients=[],selectedBedId=null,dragPatient=null,selectedPatient=null,callTimer=null;
 let panelOpen=true,selectedStaffId=null,dispTargetBedId=null;
 let staffState=[];
 let gameRunning=false,gameOver=false,gameClear=false;
@@ -929,7 +935,13 @@ function renderBeds(){
         ?`<div style="font-size:8px;color:#e2e8f0;font-weight:500;">${bed.label}</div><div style="font-size:7px;color:#94a3b8;max-width:${w}px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${bed.patient.chief}</div>`
         :`<div style="font-size:8px;color:#475569;">${bed.label}</div><div style="font-size:7px;color:#334155;">空き</div>`;
       wrap.innerHTML=`<div class="drop-ring"></div><div class="drop-ring-blocked"></div>${makeBedSVG(bed,w,h,isSel)}<div style="text-align:center;">${lbl}</div>`;
-      wrap.addEventListener("click",()=>{if(!bed.patient)return;selectedBedId=bed.id;renderBeds();renderDetail();if(!panelOpen)togglePanel();checkTutEvent("bed_click");});
+      // 患者選択中は空きベッドをハイライト
+      if(selectedPatient&&!bed.patient)wrap.classList.add("assign-target");
+      wrap.addEventListener("click",()=>{
+        if(selectedPatient&&!bed.patient){assignPatient(bed.id);return;}
+        if(!bed.patient)return;
+        selectedBedId=bed.id;renderBeds();renderDetail();if(!panelOpen)togglePanel();checkTutEvent("bed_click");
+      });
       wrap.addEventListener("dragover",e=>{e.preventDefault();bed.patient?wrap.classList.add("drop-blocked"):wrap.classList.add("drop-target");});
       wrap.addEventListener("dragleave",()=>{wrap.classList.remove("drop-target");wrap.classList.remove("drop-blocked");});
       wrap.addEventListener("drop",e=>{e.preventDefault();wrap.classList.remove("drop-target");wrap.classList.remove("drop-blocked");assignPatient(bed.id);});
@@ -949,10 +961,13 @@ function renderWaitList(){
   document.getElementById("drag-hint").style.display=waitPatients.length?"":"none";
   waitPatients.forEach(p=>{
     const card=document.createElement("div");
-    card.className=`wait-card ${TRIAGE_LV[p.color]||"lv3"}`;card.draggable=true;
+    const isSel=selectedPatient&&selectedPatient.id===p.id;
+    card.className=`wait-card ${TRIAGE_LV[p.color]||"lv3"}${isSel?" sel":""}`;
+    card.draggable=true;
     card.innerHTML=`<div style="display:flex;align-items:center;"><span style="width:6px;height:6px;border-radius:50%;background:${TRIAGE_BDR[p.color]};display:inline-block;margin-right:3px;flex-shrink:0;"></span><span class="pt-name">${p.name}/${p.age}歳</span></div>
       <div class="pt-chief">${p.chief}</div>
-      <div class="pt-vitals"><span class="vbadge hr">HR${p.HR}</span><span class="vbadge bp">BP${p.BP_sys}</span><span class="vbadge spo2">SpO₂${p.SpO2}%</span></div>`;
+      <div class="pt-vitals"><span class="vbadge hr">HR${p.HR}</span><span class="vbadge bp">BP${p.BP_sys}</span><span class="vbadge spo2">SpO₂${p.SpO2}%</span></div>
+      <button class="assign-btn${isSel?" selected":""}" onclick="selectPatientForAssign('${p.id}')">${isSel?"✕ キャンセル":"▶ ベッドへ割り当てる"}</button>`;
     card.addEventListener("dragstart",e=>{dragPatient=p;card.classList.add("dragging");const g=document.getElementById("ghost");g.style.background=TRIAGE_BG[p.color]||"#0f2e1a";g.style.borderColor=TRIAGE_BDR[p.color]||"#22c55e";g.textContent=p.name+" — "+p.chief;g.style.display="block";e.dataTransfer.effectAllowed="move";});
     card.addEventListener("drag",e=>{if(e.clientX===0&&e.clientY===0)return;const g=document.getElementById("ghost");g.style.left=(e.clientX+14)+"px";g.style.top=(e.clientY-18)+"px";});
     card.addEventListener("dragend",()=>{card.classList.remove("dragging");document.getElementById("ghost").style.display="none";dragPatient=null;});
@@ -1040,22 +1055,32 @@ function renderDetail(){
 }
 
 // ===== アクション =====
+function selectPatientForAssign(patientId){
+  // 同じ患者を再度クリックでキャンセル
+  if(selectedPatient&&selectedPatient.id===patientId){selectedPatient=null;}
+  else{selectedPatient=waitPatients.find(p=>p.id===patientId)||null;}
+  renderWaitList();renderBeds();
+}
+
 function assignPatient(bedId){
-  if(!dragPatient)return;
+  // ボタン操作（selectedPatient）とドラッグ操作（dragPatient）の両方に対応
+  const patient=selectedPatient||dragPatient;
+  if(!patient)return;
   const bed=beds.find(b=>b.id===bedId);if(!bed||bed.patient){showToast("このベッドはすでに使用中です","warn");return;}
-  const mm=bed.zone==="critical"&&(dragPatient.color==="green"||dragPatient.color==="yellow");
-  const uu=bed.zone==="exam"&&dragPatient.color==="red";
-  bed.patient={...dragPatient,BP_dia:dragPatient.BP_dia||70,orders:[],signals:{},disposed:false,urgency:100,ivOrdered:false};
-  waitPatients=waitPatients.filter(p=>p.id!==dragPatient.id);
-  let pts=dragPatient.color==="red"?100:dragPatient.color==="orange"?60:30;
+  const mm=bed.zone==="critical"&&(patient.color==="green"||patient.color==="yellow");
+  const uu=bed.zone==="exam"&&patient.color==="red";
+  bed.patient={...patient,BP_dia:patient.BP_dia||70,orders:[],signals:{},disposed:false,urgency:100,ivOrdered:false};
+  waitPatients=waitPatients.filter(p=>p.id!==patient.id);
+  let pts=patient.color==="red"?100:patient.color==="orange"?60:30;
   if(mm){pts-=40;changeSat(-5);}if(uu){pts-=50;changeSat(-8);}
   score=Math.max(0,score+pts);document.getElementById("score-disp").textContent=score.toLocaleString();
-  selectedBedId=bedId;renderBeds();renderWaitList();renderDetail();if(!panelOpen)togglePanel();
+  selectedBedId=bedId;selectedPatient=null;dragPatient=null;
+  renderBeds();renderWaitList();renderDetail();if(!panelOpen)togglePanel();
   const wrap=document.querySelector(`[data-bed-id="${bedId}"]`);
   if(wrap){const fl=document.createElement("div");fl.className="afl";wrap.style.position="relative";wrap.appendChild(fl);setTimeout(()=>fl.remove(),700);}
   if(mm)showToast("⚠ 軽症患者を重症ベッドへ（−40pt）","warn");
   else if(uu)showToast("⚠ 重症患者を診察室へ（−50pt）","warn");
-  else showToast(`${dragPatient.name}を「${bed.label}」に割り当てました`);
+  else showToast(`${patient.name}を「${bed.label}」に割り当てました`);
   checkTutEvent("assigned");
 }
 
