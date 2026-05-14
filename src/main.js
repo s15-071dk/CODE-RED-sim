@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { STAFF_DEFS, STAFF_SPEECH, fatigueState } from './data/staff.js';
-import { setupTutorial, setupStage1, setupStage2 } from './data/stages.js';
+import { setupTutorial, setupStage1, setupStage2, setupStage3 } from './data/stages.js';
 import { renderBeds, renderWaitList, renderDetail, renderStaffList } from './ui/render.js';
 import { showToast, showAlert, logMsg, renderLog } from './ui/notifications.js';
 import { getUrgencyColor, changeSat, calcGrade, triggerGameOver, triggerClear } from './systems/scoring.js';
@@ -78,6 +78,8 @@ export function startStage(stageName) {
     setupStage1();
   } else if (stageName === "stage2") {
     setupStage2();
+  } else if (stageName === "stage3") {
+    setupStage3();
   }
 
   renderBeds();
@@ -94,6 +96,10 @@ export function tryStage(stageName) {
   }
   if (stageName === "stage2" && !state.progress.s1Done) {
     showToast("先にステージ1をクリアしてください", "warn");
+    return;
+  }
+  if (stageName === "stage3" && !state.progress.s2Done) {
+    showToast("先にステージ2をクリアしてください", "warn");
     return;
   }
   startStage(stageName);
@@ -123,8 +129,19 @@ export function updateUnlocks() {
     if (cs2) cs2.classList.remove("locked");
     if (rs2) rs2.innerHTML = `<div style="font-size:20px;font-weight:800;color:#f97316;">→</div>`;
     if (gs1) gs1.textContent = state.progress.s1Grade;
+  }
+  if (state.progress.s2Done) {
+    const cs3 = document.getElementById("card-s3");
+    const rs3 = document.getElementById("right-s3");
+    const gs2 = document.getElementById("grade-s2");
+    if (cs3) cs3.classList.remove("locked");
+    if (rs3) rs3.innerHTML = `<div style="font-size:20px;font-weight:800;color:#ef4444;">→</div>`;
+    if (gs2) gs2.textContent = state.progress.s2Grade;
     const tn = document.getElementById("title-note");
-    if (tn) tn.textContent = "ステージ1をクリアしました！ステージ2が解放されました";
+    if (tn) tn.textContent = "ステージ2クリア！ステージ3が解放されました";
+  } else if (state.progress.s1Done) {
+    const tn = document.getElementById("title-note");
+    if (tn) tn.textContent = "ステージ1クリア！ステージ2が解放されました";
   }
 }
 
@@ -232,7 +249,14 @@ export function gameLoop() {
     if (allDone) {
       state.progress.s2Done  = true;
       state.progress.s2Grade = calcGrade().g;
+      updateUnlocks();
       triggerClear("ステージ2 クリア！", "重症患者も含め全員対応しました");
+    }
+  }
+  if (state.currentStage === "stage3") {
+    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0 && !state._pendingCall;
+    if (allDone) {
+      triggerClear("ステージ3 クリア！", "スタッフ管理もこなしました");
     }
   }
 

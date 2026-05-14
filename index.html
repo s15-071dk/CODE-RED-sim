@@ -102,7 +102,7 @@
     <button class="back-btn" onclick="backToTitle()">← タイトル</button>
   </div>
 
-  <div class="body-wrap">
+  <div class="body-wrap" id="body-wrap">
     <div class="left-panel">
       <div class="panel-hdr">待機患者 <span style="color:#ef4444;" id="wait-count">0</span></div>
       <div class="wait-area">
@@ -125,7 +125,6 @@
         <div class="zone-lbl"><i class="ti ti-stethoscope" style="color:#60a5fa;font-size:9px;margin-right:3px;"></i>診察室（5室）</div>
         <div class="beds-row-exam" id="exam-beds"></div>
       </div>
-      <div class="spotlight" id="spotlight"><div class="sp-ring" id="sp-ring"></div></div>
       <div class="spop" id="spop" style="display:none;">
         <button class="spop-close" onclick="closeSpop()">✕</button>
         <div class="spop-name" id="spop-name"></div>
@@ -148,6 +147,7 @@
       </div>
       <div class="col-tab" onclick="togglePanel()">患者詳細</div>
     </div>
+    <div class="spotlight" id="spotlight"><div class="sp-ring" id="sp-ring"></div></div>
   </div>
 
   <div class="log-panel" id="log-panel">

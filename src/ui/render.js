@@ -4,6 +4,7 @@ import { DISEASE_SIG, SIG_COLORS } from '../data/diseases.js';
 import { fatigueState } from '../data/staff.js';
 import { makeVitalHtml, waitVitals } from '../systems/vitals.js';
 import { getUrgencyColor } from '../systems/scoring.js';
+import { ensureTutorialSpotlightObserver, syncTutorialSpotlightRing } from './tutorialSpotlight.js';
 
 export function makeBedSVG(bed, w, h, isSel) {
   const p = bed.patient, ck = p ? p.color : "empty", c = COLORS[ck], occ = !!p;
@@ -60,6 +61,7 @@ export function makeBedSVG(bed, w, h, isSel) {
 }
 
 export function renderBeds() {
+  ensureTutorialSpotlightObserver();
   ["critical-beds", "exam-beds"].forEach(id => document.getElementById(id).innerHTML = "");
   [
     { zone: "critical", cont: "critical-beds", w: 96,  h: 104 },
@@ -114,6 +116,8 @@ export function renderBeds() {
   const se   = document.getElementById("stat-e");
   sc.textContent = co + "/" + crit.length; sc.className = "val" + (co === crit.length ? " red" : " grn");
   se.textContent = eo + "/" + exam.length; se.className = "val" + (eo === exam.length ? " red" : " grn");
+
+  requestAnimationFrame(() => syncTutorialSpotlightRing());
 }
 
 export function renderWaitList() {
@@ -154,6 +158,7 @@ export function renderWaitList() {
     });
     list.appendChild(card);
   });
+  requestAnimationFrame(() => syncTutorialSpotlightRing());
 }
 
 export function renderStaffList() {
@@ -179,6 +184,7 @@ export function renderDetail() {
   if (!bed || !bed.patient) {
     title.textContent = "患者詳細";
     body.innerHTML    = `<div class="no-sel"><i class="ti ti-user-search"></i>ベッドを選択するか<br>患者を割り当ててください</div>`;
+    requestAnimationFrame(() => syncTutorialSpotlightRing());
     return;
   }
   const p         = bed.patient;
@@ -255,4 +261,5 @@ export function renderDetail() {
     ${state.staffEnabled ? `<div class="sa-sec"><div class="sa-title">スタッフ配置 <span style="font-size:8px;color:#475569;font-weight:normal;">— ${assigned.length > 0 ? "処置速度 ×" + speedMult.toFixed(1) : "配置で処置が速くなります"}</span></div><div class="sa-list">${assignedHTML}</div>${addBtns}</div>` : ""}
     <div class="ord-sec"><div class="ord-sec-title">検査・処置オーダー</div><div class="ord-grid">${ORDERS.map(obtn).join("")}</div></div>
     ${sigHTML}${dispHTML}`;
+  requestAnimationFrame(() => syncTutorialSpotlightRing());
 }

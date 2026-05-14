@@ -1,5 +1,6 @@
 import { state } from '../state.js';
 import { TUT_STEPS } from '../data/stages.js';
+import { syncTutorialSpotlightRing, ensureTutorialSpotlightObserver } from '../ui/tutorialSpotlight.js';
 
 export function showTutStep(idx) {
   const step = TUT_STEPS[idx];
@@ -18,25 +19,14 @@ export function showTutStep(idx) {
   } else {
     nb.style.display = "none";
   }
-  showSpotlight(step.id);
+  ensureTutorialSpotlightObserver();
+  // DOM 更新後に2フレーム待ってからリングを同期
+  requestAnimationFrame(() => requestAnimationFrame(() => syncTutorialSpotlightRing()));
 }
 
 export function showSpotlight(stepId) {
-  const ring = document.getElementById("sp-ring");
-  const map  = { drag: "wait-list", click_bed: "critical-beds", order: "rp-body", more_order: "rp-body", disp: "rp-body" };
-  const targetId = map[stepId];
-  if (!targetId) { ring.style.display = "none"; return; }
-  const shell  = document.getElementById("er-area");
-  const target = document.getElementById(targetId);
-  if (!target)  { ring.style.display = "none"; return; }
-  const sr  = shell.getBoundingClientRect();
-  const tr  = target.getBoundingClientRect();
-  const pad = 8;
-  ring.style.display = "block";
-  ring.style.left    = (tr.left - sr.left - pad) + "px";
-  ring.style.top     = (tr.top  - sr.top  - pad) + "px";
-  ring.style.width   = (tr.width  + pad * 2) + "px";
-  ring.style.height  = (tr.height + pad * 2) + "px";
+  // tutorialSpotlight.js に委譲。stepId は state.tutStepIdx から参照される
+  syncTutorialSpotlightRing();
 }
 
 export function nextTutStep() {
