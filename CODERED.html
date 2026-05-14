@@ -74,6 +74,9 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .timer-disp{font-size:14px;font-weight:500;color:#f8fafc;letter-spacing:2px;margin-left:auto;}
 .back-btn{font-size:10px;padding:3px 9px;border-radius:4px;border:0.5px solid #2d3748;background:#1e2736;color:#64748b;cursor:pointer;margin-left:8px;}
 .back-btn:hover{color:#94a3b8;}
+.pause-btn{font-size:10px;padding:3px 10px;border-radius:4px;border:0.5px solid #f97316;background:#2d1f0a;color:#fb923c;cursor:pointer;margin-left:4px;font-weight:600;}
+.pause-btn:hover{background:#3d2a10;}
+.pause-btn.paused{border-color:#22c55e;background:#0f2e1a;color:#4ade80;}
 .alert-bar{background:#2d0f0f;border-bottom:1px solid #ef4444;padding:3px 14px;font-size:10px;color:#fca5a5;display:none;align-items:center;gap:6px;flex-shrink:0;}
 .alert-bar.show{display:flex;}
 
@@ -425,6 +428,7 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
     </div>
     <span class="alert-badge" id="top-alert"><i class="ti ti-alert-triangle"></i> 入電中</span>
     <span class="timer-disp" id="clock">08:00</span>
+    <button class="pause-btn" id="pause-btn" onclick="togglePause()">⏸ 一時停止</button>
     <button class="back-btn" onclick="backToTitle()">← タイトル</button>
   </div>
 
@@ -637,7 +641,7 @@ let clockMin=8,clockSec=0;
 let beds=[],waitPatients=[],selectedBedId=null,dragPatient=null,selectedPatient=null,callTimer=null;
 let panelOpen=true,selectedStaffId=null,dispTargetBedId=null;
 let staffState=[];
-let gameRunning=false,gameOver=false,gameClear=false;
+let gameRunning=false,gameOver=false,gameClear=false,gamePaused=false;
 let mainLoop=null,staffEnabled=false,callEnabled=false,satEnabled=false;
 let progress={tutDone:false,s1Done:false};
 let orderCountForTut=0;
@@ -813,6 +817,16 @@ function tryStage(stageName){
   if(stageName==="stage1"&&!progress.tutDone){showToast("先にチュートリアルをクリアしてください","warn");return;}
   startStage(stageName);
 }
+function togglePause(){
+  if(!gameRunning)return;
+  gamePaused=!gamePaused;
+  const btn=document.getElementById("pause-btn");
+  btn.textContent=gamePaused?"▶ 再開":"⏸ 一時停止";
+  btn.classList.toggle("paused",gamePaused);
+  if(gamePaused)showToast("⏸ 一時停止中","warn");
+  else showToast("▶ 再開しました");
+}
+
 function backToTitle(){
   if(mainLoop){clearInterval(mainLoop);mainLoop=null;}
   if(callTimer){clearInterval(callTimer);callTimer=null;}
@@ -832,7 +846,7 @@ function updateUnlocks(){
 
 // ===== メインループ =====
 function gameLoop(){
-  if(!gameRunning)return;
+  if(!gameRunning||gamePaused)return;
   shiftElapsed+=2;
   clockSec+=2;if(clockSec>=60){clockSec-=60;clockMin++;}if(clockMin>=24)clockMin=0;
   document.getElementById("clock").textContent=String(clockMin).padStart(2,"0")+":"+String(clockSec).padStart(2,"0");
