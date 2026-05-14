@@ -95,3 +95,47 @@ export function setupStage2() {
   document.getElementById("tut-nav").classList.remove("show");
   document.getElementById("sp-ring").style.display = "none";
 }
+
+export function setupStage3() {
+  state.beds = [
+    { id: "c1", zone: "critical", label: "重症 01", patient: null },
+    { id: "c2", zone: "critical", label: "重症 02", patient: null },
+    { id: "e1", zone: "exam",     label: "診察 01", patient: null },
+    { id: "e2", zone: "exam",     label: "診察 02", patient: null },
+    { id: "e3", zone: "exam",     label: "診察 03", patient: null },
+  ];
+  state.waitPatients = [
+    {
+      id: "s3-p1", name: "高橋 由美", age: 70, sex: "女性", pmh: "心房細動・高血圧",
+      chief: "意識レベル低下・右片麻痺", color: "red",
+      HR: 58, BP_sys: 185, BP_dia: 110, SpO2: 94, GCS: 11, RR: 20, Temp: 36.6,
+      disease: "stroke",
+    },
+    {
+      id: "s3-p2", name: "木村 義男", age: 62, sex: "男性", pmh: "高血圧・喫煙歴",
+      chief: "胸痛・冷汗", color: "red",
+      HR: 118, BP_sys: 72, BP_dia: 48, SpO2: 90, GCS: 14, RR: 26, Temp: 36.4,
+      disease: "acs",
+    },
+    {
+      id: "s3-p3", name: "佐藤 真理", age: 54, sex: "女性", pmh: "胆石症",
+      chief: "腹痛・嘔気", color: "orange",
+      HR: 96, BP_sys: 108, BP_dia: 68, SpO2: 97, GCS: 15, RR: 18, Temp: 37.5,
+      disease: "abdo",
+    },
+    {
+      id: "s3-p4", name: "山本 大輔", age: 28, sex: "男性", pmh: "なし",
+      chief: "右足首捻挫・疼痛", color: "green",
+      HR: 76, BP_sys: 122, BP_dia: 78, SpO2: 99, GCS: 15, RR: 16, Temp: 36.7,
+      disease: "minor", noOrderNeeded: true,
+    },
+  ];
+  state.staffEnabled = true;
+  state.satEnabled   = true;
+  state.callEnabled  = true;
+  document.getElementById("staff-panel").style.display = "flex";
+  document.getElementById("shift-wrap").style.display  = "flex";
+  document.getElementById("stage-lbl").textContent = "Stage 3";
+  document.getElementById("tut-nav").classList.remove("show");
+  document.getElementById("sp-ring").style.display = "none";
+}
