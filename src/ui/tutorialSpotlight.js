@@ -1,8 +1,8 @@
 import { state } from '../state.js';
 import { TUT_STEPS } from '../data/stages.js';
 
-// tutorial.js の showSpotlight は #er-area 基準のため、待機リスト・右パネルでズレる。
-// 本モジュールで #body-wrap 基準に上書きする（チュートリアル中のみ）。
+// チュートリアル中のハイライト枠。#body-wrap 基準で座標を合わせる（左待機・右パネル含む）。
+// tutorial.js の showTutStep から sync が呼ばれる。
 
 const TARGET_MAP = {
   drag: 'wait-list',
@@ -29,10 +29,19 @@ export function syncTutorialSpotlightRing() {
     ring.style.display = 'none';
     return;
   }
-  const target = document.getElementById(targetId);
+  let target = document.getElementById(targetId);
   if (!target) {
     ring.style.display = 'none';
     return;
+  }
+
+  // STEP2: 患者がいるベッド枠を優先（診察室に割り当てた場合も枠が正しく乗る）
+  if (step.id === 'click_bed') {
+    const occ = state.beds.find(b => b.patient);
+    if (occ) {
+      const wrap = document.querySelector(`[data-bed-id="${occ.id}"]`);
+      if (wrap) target = wrap;
+    }
   }
 
   const sr = shell.getBoundingClientRect();
