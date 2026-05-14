@@ -50,16 +50,16 @@
         <div class="stage-desc">軽症中心。オーダーとdispositionの練習</div>
         <div class="stage-tags"><span class="stag stag-easy">難易度 ★☆☆</span><span class="stag stag-info">患者 3名</span><span class="stag stag-info">入電なし</span></div>
       </div>
-      <div id="right-s1"><div class="lock-icon">🔒</div></div>
+      <div id="right-s1"><div style="font-size:20px;font-weight:800;color:#60a5fa;" id="grade-s1">🔒</div></div>
     </div>
-    <div class="stage-card s2 locked">
+    <div class="stage-card s2 locked" id="card-s2" onclick="tryStage('stage2')">
       <div class="stage-num" style="color:#f97316;">2</div>
       <div class="stage-info">
         <div class="stage-name">救急の基本</div>
         <div class="stage-desc">重症患者が登場。入電あり</div>
-        <div class="stage-tags"><span class="stag stag-med">難易度 ★★☆</span><span class="stag stag-info">患者 4名</span><span class="stag stag-info">入電あり</span></div>
+        <div class="stage-tags"><span class="stag stag-med">難易度 ★★☆</span><span class="stag stag-info">患者 3名</span><span class="stag stag-info">入電あり</span></div>
       </div>
-      <div><div class="lock-icon">🔒</div></div>
+      <div id="right-s2"><div class="lock-icon">🔒</div></div>
     </div>
     <div class="stage-card s3 locked">
       <div class="stage-num" style="color:#ef4444;">3</div>
@@ -71,7 +71,7 @@
       <div><div class="lock-icon">🔒</div></div>
     </div>
   </div>
-  <div class="title-note">チュートリアルをクリアするとステージ1が解放されます</div>
+  <div class="title-note" id="title-note">チュートリアルをクリアするとステージ1が解放されます</div>
 </div>
 
 <!-- ゲーム画面 -->

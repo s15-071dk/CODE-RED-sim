@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { STAFF_DEFS, STAFF_SPEECH, fatigueState } from './data/staff.js';
-import { setupTutorial, setupStage1 } from './data/stages.js';
+import { setupTutorial, setupStage1, setupStage2 } from './data/stages.js';
 import { renderBeds, renderWaitList, renderDetail, renderStaffList } from './ui/render.js';
 import { showToast, showAlert, logMsg, renderLog } from './ui/notifications.js';
 import { getUrgencyColor, changeSat, calcGrade, triggerGameOver, triggerClear } from './systems/scoring.js';
@@ -76,6 +76,8 @@ export function startStage(stageName) {
     showTutStep(0);
   } else if (stageName === "stage1") {
     setupStage1();
+  } else if (stageName === "stage2") {
+    setupStage2();
   }
 
   renderBeds();
@@ -88,6 +90,10 @@ export function startStage(stageName) {
 export function tryStage(stageName) {
   if (stageName === "stage1" && !state.progress.tutDone) {
     showToast("先にチュートリアルをクリアしてください", "warn");
+    return;
+  }
+  if (stageName === "stage2" && !state.progress.s1Done) {
+    showToast("先にステージ1をクリアしてください", "warn");
     return;
   }
   startStage(stageName);
@@ -109,6 +115,16 @@ export function updateUnlocks() {
     document.getElementById("card-s1").classList.remove("locked");
     document.getElementById("right-s1").innerHTML = `<div style="font-size:20px;font-weight:800;color:#60a5fa;">→</div>`;
     document.getElementById("grade-tut").textContent = "✓";
+  }
+  if (state.progress.s1Done) {
+    const cs2 = document.getElementById("card-s2");
+    const rs2 = document.getElementById("right-s2");
+    const gs1 = document.getElementById("grade-s1");
+    if (cs2) cs2.classList.remove("locked");
+    if (rs2) rs2.innerHTML = `<div style="font-size:20px;font-weight:800;color:#f97316;">→</div>`;
+    if (gs1) gs1.textContent = state.progress.s1Grade;
+    const tn = document.getElementById("title-note");
+    if (tn) tn.textContent = "ステージ1をクリアしました！ステージ2が解放されました";
   }
 }
 
@@ -204,7 +220,20 @@ export function gameLoop() {
 
   if (state.currentStage === "stage1") {
     const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0;
-    if (allDone) triggerClear("ステージ1 クリア！", "全患者の転帰を決定しました");
+    if (allDone) {
+      state.progress.s1Done  = true;
+      state.progress.s1Grade = calcGrade().g;
+      updateUnlocks();
+      triggerClear("ステージ1 クリア！", "全患者の転帰を決定しました");
+    }
+  }
+  if (state.currentStage === "stage2") {
+    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0 && !state._pendingCall;
+    if (allDone) {
+      state.progress.s2Done  = true;
+      state.progress.s2Grade = calcGrade().g;
+      triggerClear("ステージ2 クリア！", "重症患者も含め全員対応しました");
+    }
   }
 
   renderBeds();

@@ -26,7 +26,7 @@ export const state = {
   staffEnabled: false,
   callEnabled: false,
   satEnabled: false,
-  progress: { tutDone: false, s1Done: false },
+  progress: { tutDone: false, s1Done: false, s1Grade: '--', s2Done: false, s2Grade: '--' },
   orderCountForTut: 0,
   eventLog: [],
 };
