@@ -2,7 +2,7 @@ import { state } from '../state.js';
 
 export const TUT_STEPS = [
   { id: "welcome",    icon: "🏥", step: "ようこそ",               text: "CODE RED ERへようこそ！\nあなたは救急外来の担当医です。患者を処置してdispositionを決定しましょう。",    hint: "",                                    nextLabel: "はじめる", waitFor: null },
-  { id: "drag",       icon: "👤", step: "STEP 1/5 — 患者割り当て", text: "左パネルの患者カードをドラッグして、空きベッドへ割り当ててください。",                            hint: "💡 カードをつかんでベッドの上でドロップ",  nextLabel: null,       waitFor: "assigned" },
+  { id: "drag",       icon: "👤", step: "STEP 1/5 — 患者割り当て", text: "左パネルの患者カードの「割り当て」ボタンをクリックして、空きベッドへ割り当ててください。",          hint: "💡 割り当てボタンを押してから空きベッドを選択", nextLabel: null,       waitFor: "assigned" },
   { id: "click_bed",  icon: "🛏️", step: "STEP 2/5 — ベッド確認",  text: "患者がベッドに入りました！\nベッドをクリックすると右側に詳細が表示されます。",                     hint: "💡 ベッドをクリックしてみましょう",       nextLabel: null,       waitFor: "bed_click" },
   { id: "order",      icon: "📋", step: "STEP 3/5 — オーダー",    text: "まず「点滴」をオーダーしてください。\n検査結果が🔴🟡🟢で返ってきます。",                          hint: "💡 点滴ボタンを押してください",           nextLabel: null,       waitFor: "ordered" },
   { id: "more_order", icon: "🔬", step: "STEP 4/5 — 追加検査",    text: "点滴をオーダーしました！\nもう1件、「心電図」か「血液検査」もオーダーしてみましょう。",              hint: "💡 2件完了で転帰が解放されます",          nextLabel: null,       waitFor: "two_orders" },
@@ -55,6 +55,43 @@ export function setupStage1() {
   document.getElementById("staff-panel").style.display = "none";
   document.getElementById("shift-wrap").style.display  = "flex";
   document.getElementById("stage-lbl").textContent = "Stage 1";
+  document.getElementById("tut-nav").classList.remove("show");
+  document.getElementById("sp-ring").style.display = "none";
+}
+
+export function setupStage2() {
+  state.beds = [
+    { id: "c1", zone: "critical", label: "重症 01", patient: null },
+    { id: "c2", zone: "critical", label: "重症 02", patient: null },
+    { id: "e1", zone: "exam",     label: "診察 01", patient: null },
+    { id: "e2", zone: "exam",     label: "診察 02", patient: null },
+  ];
+  state.waitPatients = [
+    {
+      id: "s2-p1", name: "木村 義男", age: 62, sex: "男性", pmh: "高血圧・喫煙歴",
+      chief: "胸痛・冷汗", color: "red",
+      HR: 115, BP_sys: 75, BP_dia: 50, SpO2: 91, GCS: 14, RR: 24, Temp: 36.5,
+      disease: "acs",
+    },
+    {
+      id: "s2-p2", name: "佐藤 真理", age: 54, sex: "女性", pmh: "胆石症",
+      chief: "腹痛・嘔気", color: "orange",
+      HR: 95, BP_sys: 110, BP_dia: 70, SpO2: 97, GCS: 15, RR: 18, Temp: 37.4,
+      disease: "abdo",
+    },
+    {
+      id: "s2-p3", name: "田中 恵子", age: 45, sex: "女性", pmh: "花粉症",
+      chief: "発熱・咽頭痛", color: "green",
+      HR: 88, BP_sys: 118, BP_dia: 76, SpO2: 98, GCS: 15, RR: 16, Temp: 38.4,
+      disease: "fever",
+    },
+  ];
+  state.staffEnabled = false;
+  state.satEnabled   = true;
+  state.callEnabled  = true;
+  document.getElementById("staff-panel").style.display = "none";
+  document.getElementById("shift-wrap").style.display  = "flex";
+  document.getElementById("stage-lbl").textContent = "Stage 2";
   document.getElementById("tut-nav").classList.remove("show");
   document.getElementById("sp-ring").style.display = "none";
 }
