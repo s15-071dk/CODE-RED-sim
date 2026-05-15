@@ -53,6 +53,31 @@ export function applyDisp(type, bedId) {
   showToast(`${p.name} — ${labels[type]}（+${pts}pt）${effectivelyCorrect ? "✓" : "⚠ 転帰を再確認"}${bonusNote}`);
   logMsg('system', '📋 ' + p.name + ' — ' + labels[type] + (effectivelyCorrect ? ' ✓' : ' ⚠') + bonusNote);
 
+  // 転帰フィードバックを生成してstateに保存
+  const sigs = Object.values(p.signals || {});
+  const redCnt = sigs.filter(s => s.color === "red").length;
+  const yelCnt = sigs.filter(s => s.color === "yellow").length;
+  let reason;
+  if (effectivelyCorrect) {
+    if (type === "icu")       reason = redCnt >= 2 ? `赤サイン${redCnt}件 → ICU適応` : "重篤サインあり → ICU適応";
+    else if (type === "admit") reason = redCnt === 1 ? "赤サイン1件 → 入院適応" : `黄サイン${yelCnt}件 → 経過観察入院`;
+    else                       reason = p.noOrderNeeded ? "軽症 → 処置なし帰宅" : "異常サインなし → 帰宅可";
+  } else {
+    const recLabels = { icu: "ICU転送", admit: "入院", discharge: "帰宅" };
+    const ds = p.disease && DISEASE_SIG[p.disease];
+    const recType = ds ? ds.rec : "discharge";
+    reason = `${recLabels[recType]}が適切でした`;
+  }
+  state.lastFeedback = { correct: effectivelyCorrect, label: labels[type], reason, pts, bedId: state.dispTargetBedId };
+
+  // 5秒後にフィードバックを消去
+  setTimeout(() => {
+    if (state.lastFeedback && state.lastFeedback.bedId === state.dispTargetBedId) {
+      state.lastFeedback = null;
+      if (state.selectedBedId === state.dispTargetBedId) renderDetail();
+    }
+  }, 5000);
+
   const _ps3    = PATIENT_SPEECH[p.disease] || PATIENT_SPEECH.fever;
   const _dspeech = _ps3.disposed && _ps3.disposed[type];
   if (_dspeech) setTimeout(() => logMsg('patient', '👤 ' + p.name + '「' + _dspeech + '」'), 800);

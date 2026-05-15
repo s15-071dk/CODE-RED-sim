@@ -29,6 +29,7 @@ export const state = {
   progress: { tutDone: false, s1Done: false, s1Grade: '--', s2Done: false, s2Grade: '--' },
   orderCountForTut: 0,
   eventLog: [],
+  lastFeedback: null,
 };
 
 export const LOG_MAX = 60;

@@ -243,8 +243,17 @@ export function renderDetail() {
     { id: "admit",     label: "一般病棟入院",  icon: "ti-building-hospital",  color: "#60a5fa", recBg: "background:#1e3a5f;color:#93c5fd;" },
     { id: "discharge", label: "帰宅",          icon: "ti-home",               color: "#22c55e", recBg: "background:#0f2e1a;color:#86efac;" },
   ];
-  const dispHTML = p.disposed
-    ? `<div class="disp-done"><i class="ti ti-circle-check"></i>転帰決定済み</div>`
+  // 転帰直後のフィードバック（state.lastFeedback・bedId一致時のみ）
+  const lf           = state.lastFeedback;
+  const feedbackHere = lf && lf.bedId === bed.id;
+  const dispHTML     = p.disposed
+    ? feedbackHere
+      ? `<div class="feedback-card ${lf.correct ? "feedback-correct" : "feedback-warn"}">
+          <div class="feedback-card-head">${lf.correct ? "✓ 正解：" : "⚠ 要確認："}${lf.label}</div>
+          <div class="feedback-card-reason">${lf.reason}</div>
+          <div class="feedback-card-pts">獲得ポイント：+${lf.pts}pt</div>
+        </div>`
+      : `<div class="disp-done"><i class="ti ti-circle-check"></i>転帰決定済み</div>`
     : `<div class="disp-sec"><div class="disp-sec-title">転帰の決定${canDispose ? '<span style="font-size:9px;color:#22c55e;margin-left:6px;">✓ 解放済み</span>' : '<span style="font-size:9px;color:#334155;margin-left:6px;">検査1件完了後に解放</span>'}</div>
     <div class="disp-opts">${dispOpts.map(opt => {
       const isRec = canDispose && rec === opt.id;
