@@ -241,4 +241,16 @@ export const STAGE4_POOL = [
     HR: 122, BP_sys: 94, BP_dia: 58, SpO2: 94, GCS: 15, RR: 24, Temp: 39.2,
     disease: "abdo",
   },
+  {
+    id: "s4-pool-16", name: "日向 颯太", age: 29, sex: "男性", pmh: "なし",
+    chief: "軽い頭痛", color: "green",
+    HR: 78, BP_sys: 118, BP_dia: 74, SpO2: 99, GCS: 15, RR: 16, Temp: 36.6,
+    disease: "minor", noOrderNeeded: true,
+  },
+  {
+    id: "s4-pool-17", name: "水城 菫", age: 41, sex: "女性", pmh: "なし",
+    chief: "擦り傷・打撲", color: "green",
+    HR: 86, BP_sys: 124, BP_dia: 78, SpO2: 100, GCS: 15, RR: 15, Temp: 36.7,
+    disease: "minor", noOrderNeeded: true,
+  },
 ];
