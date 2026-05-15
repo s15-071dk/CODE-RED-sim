@@ -22,7 +22,7 @@ export function assignPatient(bedId) {
   const patient = state.selectedPatient || state.dragPatient;
   if (!patient) return;
   const bed = state.beds.find(b => b.id === bedId);
-  if (!bed || bed.patient) { showToast("このベッドはすでに使用中です", "warn"); return; }
+  if (!bed || (bed.patient && !bed.patient.disposed)) { showToast("このベッドはすでに使用中です", "warn"); return; }
 
   const mm = bed.zone === "critical" && (patient.color === "green" || patient.color === "yellow");
   const uu = bed.zone === "exam"     && patient.color === "red";

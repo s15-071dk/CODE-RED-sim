@@ -26,10 +26,13 @@ export const state = {
   staffEnabled: false,
   callEnabled: false,
   satEnabled: false,
-  progress: { tutDone: false, s1Done: false, s1Grade: '--', s2Done: false, s2Grade: '--' },
+  progress: { tutDone: false, s1Done: false, s1Grade: '--', s2Done: false, s2Grade: '--', s3Done: false, s3Grade: '--', s4Done: false, s4Grade: '--' },
   orderCountForTut: 0,
   eventLog: [],
   lastFeedback: null,
+  shiftDuration: 240,
+  activeEvent: null,
+  stage4EventFired: false,
 };
 
 export const LOG_MAX = 60;

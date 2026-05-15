@@ -4,6 +4,8 @@ export const DISEASE_SIG = {
   fever: { blood: { color: "yellow", text: "🟡 WBC軽度上昇" },     ecg: { color: "green",  text: "🟢 正常洞調律" },           echo: { color: "green",  text: "🟢 心機能正常" },          xray: { color: "green",  text: "🟢 両肺野清明" },    ct: { color: "green",  text: "🟢 異常なし" },             rec: "discharge" },
   abdo:  { blood: { color: "red",    text: "🔴 炎症反応高値" },     ecg: { color: "green",  text: "🟢 正常" },                echo: { color: "red",    text: "🔴 腹水・炎症所見" },       xray: { color: "yellow", text: "🟡 イレウス疑い" }, ct: { color: "red",    text: "🔴 腹膜炎所見" },           rec: "admit" },
   bp:    { blood: { color: "yellow", text: "🟡 電解質 軽度異常" },  ecg: { color: "yellow", text: "🟡 左室肥大パターン" },      echo: { color: "yellow", text: "🟡 軽度壁肥厚" },            xray: { color: "green",  text: "🟢 異常なし" },     ct: { color: "green",  text: "🟢 頭蓋内異常なし" },       rec: "admit" },
+  sepsis:{ blood: { color: "red",    text: "🔴 乳酸高値・WBC高値" }, ecg: { color: "green",  text: "🟢 洞調律" },              echo: { color: "yellow", text: "🟡 心機能低下" },            xray: { color: "yellow", text: "🟡 浸潤影疑い" },   ct: { color: "red",    text: "🔴 感染巣あり" },           rec: "icu" },
+  trauma:{ blood: { color: "red",    text: "🔴 出血・貧血疑い" },   ecg: { color: "green",  text: "🟢 致死的不整脈なし" },     echo: { color: "yellow", text: "🟡 心嚢液疑い" },            xray: { color: "red",    text: "🔴 骨折・気胸疑い" }, ct: { color: "red",  text: "🔴 臓器損傷疑い" },         rec: "icu" },
   minor: { blood: { color: "green",  text: "🟢 異常なし" },         ecg: { color: "green",  text: "🟢 正常洞調律" },           echo: { color: "green",  text: "🟢 異常なし" },            xray: { color: "green",  text: "🟢 異常なし" },     ct: { color: "green",  text: "🟢 異常なし" },             rec: "discharge" },
 };
 
@@ -43,6 +45,18 @@ export const PATIENT_SPEECH = {
     critical: ["先生…頭が…", "意識が…"],
     iv_done:  ["あ…少し頭が…はっきりしてきました"],
     disposed: { icu: "お願いします", admit: "ありがとうございます", discharge: "ありがとうございました。気をつけます" },
+  },
+  sepsis: {
+    assign:   ["熱が高くて、ぼーっとします…", "寒くて震えが止まりません…", "体が全部つらいです…"],
+    critical: ["先生、意識が遠くなります…", "震えが止まらなくて苦しいです…"],
+    iv_done:  ["点滴で少し落ち着いた気がします…"],
+    disposed: { icu: "よろしくお願いします…", admit: "お願いします", discharge: "ありがとうございました" },
+  },
+  trauma: {
+    assign:   ["事故で…全身が痛いです…", "どこが痛いのか、わからないです…", "息をすると痛みます…"],
+    critical: ["先生、痛くて動けません…", "だんだん苦しくなってきました…"],
+    iv_done:  ["ありがとうございます…少し安心しました…"],
+    disposed: { icu: "お願いします…", admit: "ありがとうございます", discharge: "ありがとうございました" },
   },
   minor: {
     assign:   ["足を捻って…歩けなくて", "ちょっと転んで痛くて来たんですが", "大したことないかもですが…"],

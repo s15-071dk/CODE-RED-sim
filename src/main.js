@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { STAFF_DEFS, STAFF_SPEECH, fatigueState } from './data/staff.js';
-import { setupTutorial, setupStage1, setupStage2, setupStage3 } from './data/stages.js';
+import { setupTutorial, setupStage1, setupStage2, setupStage3, setupStage4 } from './data/stages.js';
 import { renderBeds, renderWaitList, renderDetail, renderStaffList } from './ui/render.js';
 import { showToast, showAlert, logMsg, renderLog } from './ui/notifications.js';
 import { getUrgencyColor, changeSat, calcGrade, triggerGameOver, triggerClear } from './systems/scoring.js';
@@ -58,6 +58,10 @@ export function resetGame() {
   document.getElementById("call-overlay").classList.remove("active");
   document.getElementById("top-alert").style.display = "none";
 
+  state.shiftDuration    = 240;
+  state.activeEvent      = null;
+  state.stage4EventFired = false;
+  state.lastFeedback     = null;
   state.eventLog = [];
   const lb = document.getElementById('log-body');
   if (lb) lb.innerHTML = '';
@@ -80,6 +84,10 @@ export function startStage(stageName) {
     setupStage2();
   } else if (stageName === "stage3") {
     setupStage3();
+  } else if (stageName === "stage4") {
+    state.shiftDuration = 180;
+    document.getElementById("shift-time").textContent = "3:00";
+    setupStage4();
   }
 
   renderBeds();
@@ -94,12 +102,16 @@ export function tryStage(stageName) {
     showToast("先にチュートリアルをクリアしてください", "warn");
     return;
   }
-  if (stageName === "stage2" && !state.progress.s1Done) {
-    showToast("先にステージ1をクリアしてください", "warn");
-    return;
-  }
-  if (stageName === "stage3" && !state.progress.s2Done) {
-    showToast("先にステージ2をクリアしてください", "warn");
+  // if (stageName === "stage2" && !state.progress.s1Done) {
+  //   showToast("先にステージ1をクリアしてください", "warn");
+  //   return;
+  // }
+  // if (stageName === "stage3" && !state.progress.s2Done) {
+  //   showToast("先にステージ2をクリアしてください", "warn");
+  //   return;
+  // }
+  if (stageName === "stage4" && !state.progress.s3Done) {
+    showToast("先にステージ3をクリアしてください", "warn");
     return;
   }
   startStage(stageName);
@@ -130,7 +142,16 @@ export function updateUnlocks() {
     if (rs2) rs2.innerHTML = `<div style="font-size:20px;font-weight:800;color:#f97316;">→</div>`;
     if (gs1) gs1.textContent = state.progress.s1Grade;
   }
-  if (state.progress.s2Done) {
+  if (state.progress.s3Done) {
+    const cs4 = document.getElementById("card-s4");
+    const rs4 = document.getElementById("right-s4");
+    const gs3 = document.getElementById("grade-s3");
+    if (cs4) cs4.classList.remove("locked");
+    if (rs4) rs4.innerHTML = `<div style="font-size:20px;font-weight:800;color:#a855f7;">→</div>`;
+    if (gs3) gs3.textContent = state.progress.s3Grade;
+    const tn = document.getElementById("title-note");
+    if (tn) tn.textContent = "ステージ3クリア！ステージ4が解放されました";
+  } else if (state.progress.s2Done) {
     const cs3 = document.getElementById("card-s3");
     const rs3 = document.getElementById("right-s3");
     const gs2 = document.getElementById("grade-s2");
@@ -170,6 +191,35 @@ function triggerIncident(staff, bed) {
   showToast(`${staff.short}を休憩させてください`, "err");
 }
 
+// ===== Stage4 ランダムイベント =====
+function triggerStage4Event() {
+  if (state.stage4EventFired || state.shiftElapsed < 90) return;
+  state.stage4EventFired = true;
+
+  const eventType = pickRandom(['ct_broken', 'staff_absent', 'mass_casualty']);
+  if (eventType === 'ct_broken') {
+    state.activeEvent = { type: 'ct_broken', until: state.shiftElapsed + 30 };
+    showToast('⚠ CT装置が故障！30秒間使用不可', 'err');
+    logMsg('system', '⚠ イベント発生：CT装置故障（30秒間）');
+  } else if (eventType === 'staff_absent') {
+    const available = state.staffState.filter(s => !s.absent && !s.onBreak);
+    if (available.length > 0) {
+      const target = pickRandom(available);
+      target.absent = true;
+      state.activeEvent = { type: 'staff_absent', staffId: target.id };
+      showToast(`⚠ ${target.short}が突然欠勤！`, 'err');
+      logMsg('system', `⚠ イベント発生：${target.short}（${target.roleLabel}）が欠勤`);
+      renderStaffList();
+    }
+  } else {
+    state.activeEvent = { type: 'mass_casualty' };
+    showToast('🚑 多重事故！搬送要請が2件同時に来ています', 'err');
+    logMsg('system', '⚠ イベント発生：多重入電（2台同時）');
+    triggerCall();
+    setTimeout(() => triggerCall(), 3000);
+  }
+}
+
 // ===== メインループ =====
 export function gameLoop() {
   if (!state.gameRunning || state.gamePaused) return;
@@ -181,11 +231,21 @@ export function gameLoop() {
     String(state.clockMin).padStart(2, "0") + ":" + String(state.clockSec).padStart(2, "0");
 
   if (state.satEnabled) {
-    const SHIFT = 240, rem = Math.max(0, SHIFT - state.shiftElapsed);
+    const SHIFT = state.shiftDuration, rem = Math.max(0, SHIFT - state.shiftElapsed);
     document.getElementById("shift-fill").style.width = (rem / SHIFT * 100) + "%";
     const m = Math.floor(rem / 60), s = rem % 60;
     document.getElementById("shift-time").textContent = m + ":" + (s < 10 ? "0" + s : s);
-    if (state.shiftElapsed >= SHIFT) { triggerClear("シフト完了！"); return; }
+    if (state.shiftElapsed >= SHIFT) {
+      if (state.currentStage === "stage4") {
+        state.progress.s4Done  = true;
+        state.progress.s4Grade = calcGrade().g;
+        updateUnlocks();
+        triggerClear("ナイトシフト完了！", `転帰${state.dispCountVal}名・ランダムイベントを乗り越えた`);
+      } else {
+        triggerClear("シフト完了！");
+      }
+      return;
+    }
   }
 
   if (state.staffEnabled) {
@@ -245,7 +305,7 @@ export function gameLoop() {
     }
   }
   if (state.currentStage === "stage2") {
-    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0 && !state._pendingCall;
+    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0;
     if (allDone) {
       state.progress.s2Done  = true;
       state.progress.s2Grade = calcGrade().g;
@@ -254,9 +314,26 @@ export function gameLoop() {
     }
   }
   if (state.currentStage === "stage3") {
-    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0 && !state._pendingCall;
+    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0;
     if (allDone) {
+      state.progress.s3Done  = true;
+      state.progress.s3Grade = calcGrade().g;
+      updateUnlocks();
       triggerClear("ステージ3 クリア！", "スタッフ管理もこなしました");
+    }
+  }
+  if (state.currentStage === "stage4") {
+    triggerStage4Event();
+    if (state.activeEvent?.type === 'ct_broken' && state.shiftElapsed >= state.activeEvent.until) {
+      state.activeEvent = null;
+      showToast('CT装置が復旧しました');
+      logMsg('system', '✅ CT装置が復旧しました');
+    }
+    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0;
+    if (allDone) {
+      state.progress.s4Done  = true;
+      state.progress.s4Grade = calcGrade().g;
+      triggerClear("ステージ4 クリア！", "最難関ステージを制覇しました！");
     }
   }
 

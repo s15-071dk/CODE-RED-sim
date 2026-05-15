@@ -69,12 +69,22 @@ export function applyDisp(type, bedId) {
     reason = `${recLabels[recType]}が適切でした`;
   }
   state.lastFeedback = { correct: effectivelyCorrect, label: labels[type], reason, pts, bedId: state.dispTargetBedId };
+  checkTutEvent("disposed");
 
-  // 5秒後にフィードバックを消去
+  // 5秒後にフィードバックを消去＋ベッドを空ける
+  const capturedBedId = targetId;
   setTimeout(() => {
-    if (state.lastFeedback && state.lastFeedback.bedId === state.dispTargetBedId) {
+    if (state.lastFeedback && state.lastFeedback.bedId === capturedBedId) {
       state.lastFeedback = null;
-      if (state.selectedBedId === state.dispTargetBedId) renderDetail();
+    }
+    const clearBed = state.beds.find(b => b.id === capturedBedId);
+    if (clearBed && clearBed.patient && clearBed.patient.disposed) {
+      clearBed.patient = null;
+      if (state.selectedBedId === capturedBedId) {
+        state.selectedBedId = null;
+        renderDetail();
+      }
+      renderBeds();
     }
   }, 5000);
 
@@ -85,5 +95,4 @@ export function applyDisp(type, bedId) {
   state.selectedBedId = state.dispTargetBedId;
   renderBeds();
   renderDetail();
-  checkTutEvent("disposed");
 }

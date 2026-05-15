@@ -14,6 +14,12 @@ export function placeOrder(bedId, orderId) {
   const def = ORDERS.find(o => o.id === orderId);
   if (!def) return;
 
+  if (orderId === 'ct' && state.activeEvent?.type === 'ct_broken') {
+    showToast('⚠ CT装置故障中 — 使用不可', 'warn');
+    logMsg('system', '⚠ CT故障中のためオーダー不可');
+    return;
+  }
+
   bed.patient.orders.push({ id: orderId, status: "pending" });
   state.score += 10;
   document.getElementById("score-disp").textContent = state.score.toLocaleString();

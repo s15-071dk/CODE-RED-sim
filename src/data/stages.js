@@ -1,4 +1,6 @@
 import { state } from '../state.js';
+import { pickRandomN } from '../utils/random.js';
+import { STAGE4_POOL } from './patients.js';
 
 export const TUT_STEPS = [
   { id: "welcome",    icon: "🏥", step: "ようこそ",               text: "CODE RED ERへようこそ！\nあなたは救急外来の担当医です。患者を処置してdispositionを決定しましょう。",    hint: "",                                    nextLabel: "はじめる", waitFor: null },
@@ -136,6 +138,36 @@ export function setupStage3() {
   document.getElementById("staff-panel").style.display = "flex";
   document.getElementById("shift-wrap").style.display  = "flex";
   document.getElementById("stage-lbl").textContent = "Stage 3";
+  document.getElementById("tut-nav").classList.remove("show");
+  document.getElementById("sp-ring").style.display = "none";
+}
+
+export function setupStage4() {
+  const reds    = STAGE4_POOL.filter(p => p.color === 'red');
+  const oranges = STAGE4_POOL.filter(p => p.color === 'orange');
+  const greens  = STAGE4_POOL.filter(p => p.color === 'green');
+  const picked  = [
+    ...pickRandomN(reds, 3),
+    ...pickRandomN(oranges, 1),
+    ...pickRandomN(greens, 1),
+  ].map((p, i) => ({ ...p, id: 's4-' + i, orders: [], signals: {}, urgency: 100, ivOrdered: false, disposed: false }));
+
+  state.beds = [
+    { id: "c1", zone: "critical", label: "重症 01", patient: null },
+    { id: "c2", zone: "critical", label: "重症 02", patient: null },
+    { id: "e1", zone: "exam",     label: "診察 01", patient: null },
+    { id: "e2", zone: "exam",     label: "診察 02", patient: null },
+    { id: "e3", zone: "exam",     label: "診察 03", patient: null },
+  ];
+  state.waitPatients  = picked;
+  state.staffEnabled  = true;
+  state.satEnabled    = true;
+  state.callEnabled   = true;
+  state.stage4EventFired = false;
+  state.activeEvent   = null;
+  document.getElementById("staff-panel").style.display = "flex";
+  document.getElementById("shift-wrap").style.display  = "flex";
+  document.getElementById("stage-lbl").textContent = "Stage 4";
   document.getElementById("tut-nav").classList.remove("show");
   document.getElementById("sp-ring").style.display = "none";
 }
