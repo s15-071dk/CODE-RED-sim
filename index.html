@@ -85,6 +85,7 @@
 
 <!-- ゲーム画面 -->
 <div id="game-screen">
+  <div id="event-banner" class="event-banner" role="alert" aria-live="assertive"></div>
   <div class="alert-bar" id="alert-bar"><i class="ti ti-alert-triangle"></i><span id="alert-msg"></span></div>
   <div class="top-bar">
     <span class="top-brand">🚨 CODE RED ER</span>
@@ -111,7 +112,11 @@
     <button class="back-btn" onclick="backToTitle()">← タイトル</button>
   </div>
 
-  <div class="body-wrap" id="body-wrap">
+  <div class="mobile-tabs" id="mobile-tabs" aria-label="パネル切り替え">
+    <button type="button" class="mobile-tab active" data-panel="left" onclick="setMobilePanel('left')">待機患者</button>
+    <button type="button" class="mobile-tab" data-panel="right" onclick="setMobilePanel('right')">患者詳細</button>
+  </div>
+  <div class="body-wrap" id="body-wrap" data-mobile-panel="left">
     <div class="left-panel">
       <div class="panel-hdr">待機患者 <span style="color:#ef4444;" id="wait-count">0</span></div>
       <div class="wait-area">

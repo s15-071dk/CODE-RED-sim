@@ -5,6 +5,7 @@ import { fatigueState } from '../data/staff.js';
 import { makeVitalHtml, waitVitals } from '../systems/vitals.js';
 import { getUrgencyColor } from '../systems/scoring.js';
 import { ensureTutorialSpotlightObserver, syncTutorialSpotlightRing } from './tutorialSpotlight.js';
+import { syncCtEventBanner } from './notifications.js';
 
 export function makeBedSVG(bed, w, h, isSel) {
   const p = bed.patient, ck = p ? p.color : "empty", c = COLORS[ck], occ = !!p;
@@ -69,19 +70,20 @@ export function renderBeds() {
   ].forEach(({ zone, cont, w, h }) => {
     const container = document.getElementById(cont);
     state.beds.filter(b => b.zone === zone).forEach(bed => {
+      const bedEmpty = !bed.patient || bed.patient.disposed;
       const wrap  = document.createElement("div");
       wrap.className    = "bed-wrap";
       wrap.dataset.bedId = bed.id;
       const isSel = bed.id === state.selectedBedId;
-      const lbl = bed.patient
+      const lbl = !bedEmpty
         ? `<div style="font-size:8px;color:#e2e8f0;font-weight:500;">${bed.label}</div><div style="font-size:7px;color:#94a3b8;max-width:${w}px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${bed.patient.chief}</div>`
         : `<div style="font-size:8px;color:#475569;">${bed.label}</div><div style="font-size:7px;color:#334155;">空き</div>`;
       wrap.innerHTML = `<div class="drop-ring"></div><div class="drop-ring-blocked"></div>${makeBedSVG(bed, w, h, isSel)}<div style="text-align:center;">${lbl}</div>`;
 
-      if (state.selectedPatient && !bed.patient) wrap.classList.add("assign-target");
+      if (state.selectedPatient && bedEmpty) wrap.classList.add("assign-target");
 
       wrap.addEventListener("click", () => {
-        if (state.selectedPatient && !bed.patient) { window.assignPatient(bed.id); return; }
+        if (state.selectedPatient && bedEmpty) { window.assignPatient(bed.id); return; }
         if (!bed.patient) return;
         state.selectedBedId = bed.id;
         renderBeds();
@@ -92,7 +94,7 @@ export function renderBeds() {
       });
       wrap.addEventListener("dragover", e => {
         e.preventDefault();
-        bed.patient ? wrap.classList.add("drop-blocked") : wrap.classList.add("drop-target");
+        bedEmpty ? wrap.classList.add("drop-target") : wrap.classList.add("drop-blocked");
       });
       wrap.addEventListener("dragleave", () => {
         wrap.classList.remove("drop-target");
@@ -117,6 +119,7 @@ export function renderBeds() {
   sc.textContent = co + "/" + crit.length; sc.className = "val" + (co === crit.length ? " red" : " grn");
   se.textContent = eo + "/" + exam.length; se.className = "val" + (eo === exam.length ? " red" : " grn");
 
+  syncCtEventBanner();
   requestAnimationFrame(() => syncTutorialSpotlightRing());
 }
 
