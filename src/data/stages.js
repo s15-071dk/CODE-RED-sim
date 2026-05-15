@@ -47,9 +47,39 @@ export function setupTutorial() {
 export function setupStage1() {
   state.beds = makeBeds();
   state.waitPatients = [
-    { id: "w1", name: "田中 恵子", age: 45, sex: "女性", pmh: "花粉症",         chief: "発熱・咽頭痛",    color: "green",  HR: 82, BP_sys: 118, BP_dia: 74, SpO2: 99, GCS: 15, RR: 15, Temp: 38.6, disease: "fever" },
-    { id: "w2", name: "山本 大輔", age: 28, sex: "男性", pmh: "なし",           chief: "右足首捻挫・疼痛", color: "green",  HR: 76, BP_sys: 122, BP_dia: 78, SpO2: 99, GCS: 15, RR: 16, Temp: 36.7, disease: "minor", noOrderNeeded: true },
-    { id: "w3", name: "鈴木 光子", age: 68, sex: "女性", pmh: "高血圧・高脂血症", chief: "めまい・頭痛",   color: "orange", HR: 92, BP_sys: 158, BP_dia: 94, SpO2: 97, GCS: 15, RR: 17, Temp: 36.9, disease: "bp" },
+    {
+      id: "w1", name: "田中 恵子", age: 45, sex: "女性", pmh: "花粉症",
+      chief: "発熱・咽頭痛", color: "green",
+      HR: 82, BP_sys: 118, BP_dia: 74, SpO2: 99, GCS: 15, RR: 15, Temp: 38.6,
+      disease: "fever",
+      story: "夜に子供の参観日があって…熱が下がれば行けますか？",
+      callBack: {
+        correct:   "📞 田中さんから：解熱剤が効いて、夕方の参観日に間に合いました。ありがとうございました",
+        incorrect: "⚠ 田中さんから：入院が必要だったんでしょうか…仕事も休めなくて困っています",
+      },
+    },
+    {
+      id: "w2", name: "山本 大輔", age: 28, sex: "男性", pmh: "なし",
+      chief: "右足首捻挫・疼痛", color: "green",
+      HR: 76, BP_sys: 122, BP_dia: 78, SpO2: 99, GCS: 15, RR: 16, Temp: 36.7,
+      disease: "minor", noOrderNeeded: true,
+      story: "明日、チームの大事な試合があるんです。テーピングすれば出られますか？",
+      callBack: {
+        correct:   "📞 山本さんから：テーピングで固定して試合に出られました！ありがとうございます",
+        incorrect: "⚠ 山本さんから：検査が多くて疲れました…次から病院に来るのが怖いです",
+      },
+    },
+    {
+      id: "w3", name: "鈴木 光子", age: 68, sex: "女性", pmh: "高血圧・高脂血症",
+      chief: "めまい・頭痛", color: "orange",
+      HR: 92, BP_sys: 158, BP_dia: 94, SpO2: 97, GCS: 15, RR: 17, Temp: 36.9,
+      disease: "bp",
+      story: "最近忙しくて降圧剤を飲み忘れていて…息子に無理やり連れてこられました",
+      callBack: {
+        correct:   "📞 鈴木さんが一般病棟で降圧治療中。血圧が安定してきました。息子さんも安心されています",
+        incorrect: "⚠ 鈴木さんを帰宅させましたが、深夜に高血圧緊急症で再搬送されました",
+      },
+    },
   ];
   state.staffEnabled = false;
   state.satEnabled   = true;
