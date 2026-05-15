@@ -129,6 +129,7 @@ export function backToTitle() {
 }
 
 export function updateUnlocks() {
+  saveProgress();
   if (state.progress.tutDone) {
     document.getElementById("card-s1").classList.remove("locked");
     document.getElementById("right-s1").innerHTML = `<div style="font-size:20px;font-weight:800;color:#60a5fa;">→</div>`;
@@ -341,10 +342,39 @@ export function gameLoop() {
   if (state.selectedBedId) renderDetail();
 }
 
+// ===== ローカルストレージ永続化 =====
+const PROGRESS_KEY = 'codeRedProgress';
+
+function saveProgress() {
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(state.progress)); } catch (_) {}
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (raw) Object.assign(state.progress, JSON.parse(raw));
+  } catch (_) {}
+}
+
 // ===== 初期化 =====
+loadProgress();
 updateUnlocks();
 
 // ===== window への公開 =====
+// 開発用：コンソールから window.unlockAll() でステージを全解放できる
+window.unlockAll = () => {
+  Object.assign(state.progress, { tutDone: true, s1Done: true, s1Grade: 'A', s2Done: true, s2Grade: 'A', s3Done: true, s3Grade: 'A', s4Done: false, s4Grade: '--' });
+  saveProgress();
+  updateUnlocks();
+  console.info('[DEV] All stages unlocked');
+};
+window.resetProgress = () => {
+  localStorage.removeItem(PROGRESS_KEY);
+  Object.assign(state.progress, { tutDone: false, s1Done: false, s1Grade: '--', s2Done: false, s2Grade: '--', s3Done: false, s3Grade: '--', s4Done: false, s4Grade: '--' });
+  updateUnlocks();
+  console.info('[DEV] Progress reset');
+};
+
 Object.assign(window, {
   startStage,
   tryStage,

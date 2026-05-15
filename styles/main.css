@@ -26,8 +26,7 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .lock-icon{font-size:20px;color:#334155;}
 .title-note{margin-top:20px;font-size:10px;color:#334155;}
 /* ===== 患者割り当てボタン ===== */
-/* ボタンは非表示（ドラッグ操作を優先。コードは保持） */
-.assign-btn{display:none;width:100%;margin-top:5px;padding:4px 0;border-radius:4px;border:0.5px solid #3b82f6;background:#1a2744;color:#60a5fa;font-size:9px;font-weight:600;cursor:pointer;letter-spacing:0.5px;}
+.assign-btn{display:block;width:100%;margin-top:5px;padding:4px 0;border-radius:4px;border:0.5px solid #3b82f6;background:#1a2744;color:#60a5fa;font-size:9px;font-weight:600;cursor:pointer;letter-spacing:0.5px;}
 .assign-btn:hover{background:#1e3a6e;}
 .assign-btn.selected{border-color:#f97316;background:#2d1f0a;color:#fb923c;}
 .bed-wrap.assign-target .drop-ring{display:block!important;}
