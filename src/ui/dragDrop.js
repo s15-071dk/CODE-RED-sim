@@ -3,7 +3,7 @@ import { TRIAGE_BG, TRIAGE_BDR } from '../systems/triage.js';
 import { PATIENT_SPEECH } from '../data/diseases.js';
 import { STAFF_SPEECH } from '../data/staff.js';
 import { renderBeds, renderWaitList, renderDetail } from './render.js';
-import { logMsg, showToast } from './notifications.js';
+import { logMsg, showToast, setMobilePanel } from './notifications.js';
 import { changeSat } from '../systems/scoring.js';
 import { checkTutEvent } from '../systems/tutorial.js';
 import { pickRandom } from '../utils/random.js';
@@ -48,7 +48,8 @@ export function assignPatient(bedId) {
   renderBeds();
   renderWaitList();
   renderDetail();
-  if (!state.panelOpen) window.togglePanel();
+  if (window.matchMedia('(max-width: 768px)').matches) setMobilePanel('right');
+  else if (!state.panelOpen) window.togglePanel();
 
   const wrap = document.querySelector(`[data-bed-id="${bedId}"]`);
   if (wrap) {
