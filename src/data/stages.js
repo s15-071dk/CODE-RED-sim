@@ -104,18 +104,33 @@ export function setupStage2() {
       chief: "胸痛・冷汗", color: "red",
       HR: 115, BP_sys: 75, BP_dia: 50, SpO2: 91, GCS: 14, RR: 24, Temp: 36.5,
       disease: "acs",
+      story: "今日は孫の誕生日で、ケーキを買って帰る約束なんです…胸がつぶれるみたいで。",
+      callBack: {
+        correct:   "📞 木村さんのご家族から：すぐICUで治療が始まり、山場を越えました。孫にも無事だと伝えられました",
+        incorrect: "⚠ 木村さんは帰宅後に胸痛が悪化し、心停止寸前で再搬送されました",
+      },
     },
     {
       id: "s2-p2", name: "佐藤 真理", age: 54, sex: "女性", pmh: "胆石症",
       chief: "腹痛・嘔気", color: "orange",
       HR: 95, BP_sys: 110, BP_dia: 70, SpO2: 97, GCS: 15, RR: 18, Temp: 37.4,
       disease: "abdo",
+      story: "母の夕飯を作らないといけないんです。でも立っているのもつらくて…。",
+      callBack: {
+        correct:   "📞 佐藤さんから：入院して点滴と検査を受け、腹痛が落ち着いてきました。母にも連絡できました",
+        incorrect: "⚠ 佐藤さんは帰宅後に腹痛が悪化し、腹膜炎疑いで再搬送されました",
+      },
     },
     {
       id: "s2-p3", name: "田中 恵子", age: 45, sex: "女性", pmh: "花粉症",
       chief: "発熱・咽頭痛", color: "green",
       HR: 88, BP_sys: 118, BP_dia: 76, SpO2: 98, GCS: 15, RR: 16, Temp: 38.4,
       disease: "fever",
+      story: "明日の朝までに少しでも楽になりたいんです。家のことを代われる人がいなくて…。",
+      callBack: {
+        correct:   "📞 田中さんから：薬を飲んで休んだら熱が下がってきました。家でも様子を見られそうです",
+        incorrect: "⚠ 田中さんから：入院と言われて家の予定が全部止まってしまいました。本当に必要だったのでしょうか",
+      },
     },
   ];
   state.staffEnabled = false;
@@ -142,24 +157,44 @@ export function setupStage3() {
       chief: "意識レベル低下・右片麻痺", color: "red",
       HR: 58, BP_sys: 185, BP_dia: 110, SpO2: 94, GCS: 11, RR: 20, Temp: 36.6,
       disease: "stroke",
+      story: "朝の散歩に出ようとしたら、急に足が動かなくて…言葉も出にくいんです。",
+      callBack: {
+        correct:   "📞 高橋さんの息子さんから：すぐICUで治療が始まり、麻痺の悪化は止まっています。ありがとうございます",
+        incorrect: "⚠ 高橋さんは帰宅後に意識が悪化し、重い後遺症が残る可能性が高い状態で再搬送されました",
+      },
     },
     {
       id: "s3-p2", name: "木村 義男", age: 62, sex: "男性", pmh: "高血圧・喫煙歴",
       chief: "胸痛・冷汗", color: "red",
       HR: 118, BP_sys: 72, BP_dia: 48, SpO2: 90, GCS: 14, RR: 26, Temp: 36.4,
       disease: "acs",
+      story: "仕事の引き継ぎだけでも電話したいんですが…胸が苦しくて声が出ません。",
+      callBack: {
+        correct:   "📞 木村さんの同僚から：ICUで処置が始まったと聞きました。命が助かって本当によかったです",
+        incorrect: "⚠ 木村さんは帰宅後に倒れ、急性心筋梗塞の疑いで緊急再搬送されました",
+      },
     },
     {
       id: "s3-p3", name: "佐藤 真理", age: 54, sex: "女性", pmh: "胆石症",
       chief: "腹痛・嘔気", color: "orange",
       HR: 96, BP_sys: 108, BP_dia: 68, SpO2: 97, GCS: 15, RR: 18, Temp: 37.5,
       disease: "abdo",
+      story: "痛み止めだけもらえれば帰れると思って来たんです。でも波みたいに痛みます。",
+      callBack: {
+        correct:   "📞 佐藤さんから：入院して詳しく診てもらえて安心しました。痛みも少し落ち着いています",
+        incorrect: "⚠ 佐藤さんは帰宅後に嘔吐と腹痛が強くなり、緊急手術の可能性がある状態で戻ってきました",
+      },
     },
     {
       id: "s3-p4", name: "山本 大輔", age: 28, sex: "男性", pmh: "なし",
       chief: "右足首捻挫・疼痛", color: "green",
       HR: 76, BP_sys: 122, BP_dia: 78, SpO2: 99, GCS: 15, RR: 16, Temp: 36.7,
       disease: "minor", noOrderNeeded: true,
+      story: "歩くと痛いけど、明日はどうしても外せない予定があって…大げさじゃないですよね？",
+      callBack: {
+        correct:   "📞 山本さんから：安静と固定でだいぶ楽になりました。余計な検査がなくて助かりました",
+        incorrect: "⚠ 山本さんから：検査や処置が多くて不安になりました…軽いけがでも大ごとになるんですね",
+      },
     },
   ];
   state.staffEnabled = true;

@@ -46,6 +46,16 @@ export function skipTut() {
 
 export function checkTutEvent(event) {
   if (state.currentStage !== "tutorial") return;
+
+  // 転帰確定はどのステップにいても即チュートリアル完了とする
+  if (event === "disposed") {
+    const doneIdx = TUT_STEPS.findIndex(s => s.id === "done");
+    state.tutStepIdx = doneIdx;
+    showTutStep(doneIdx);
+    completeTutorial();
+    return;
+  }
+
   const step = TUT_STEPS[state.tutStepIdx];
   if (!step || !step.waitFor) return;
   let match = false;
@@ -53,7 +63,6 @@ export function checkTutEvent(event) {
   if (step.waitFor === "bed_click"  && event === "bed_click") match = true;
   if (step.waitFor === "ordered"    && event === "ordered")   match = true;
   if (step.waitFor === "two_orders" && event === "ordered" && state.orderCountForTut >= 2) match = true;
-  if (step.waitFor === "disposed"   && event === "disposed")  match = true;
   if (match) nextTutStep();
 }
 
