@@ -92,6 +92,22 @@ export function applyDisp(type, bedId) {
   const _dspeech = _ps3.disposed && _ps3.disposed[type];
   if (_dspeech) setTimeout(() => logMsg('patient', '👤 ' + p.name + '「' + _dspeech + '」'), 800);
 
+  // Papers Please コールバック：25秒後に転帰結果を通知
+  if (p.callBack) {
+    const msg = effectivelyCorrect ? p.callBack.correct : p.callBack.incorrect;
+    if (msg) {
+      setTimeout(() => {
+        if (!state.gameRunning && !state.gameClear) return;
+        if (effectivelyCorrect) {
+          logMsg('system', msg);
+        } else {
+          logMsg('alert', msg);
+          changeSat(-10);
+        }
+      }, 25000);
+    }
+  }
+
   state.selectedBedId = state.dispTargetBedId;
   renderBeds();
   renderDetail();
