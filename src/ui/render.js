@@ -159,6 +159,20 @@ export function renderBeds() {
 
       if (state.selectedPatient && bedEmpty) wrap.classList.add("assign-target");
 
+      // 判定：必須検査が完了しているか、または検査不要フラグが立っているか
+      const p = bed.patient;
+      const keyOrder = p?.disease ? (DISEASE_SIG[p.disease]?.keyOrder || null) : null;
+      const keyDone = keyOrder
+        ? keyOrder.every(k => !!p.signals?.[k])
+        : (p?.orders ? p.orders.filter(o => o.status === 'done').length >= 1 : false);
+      const showBadge = !!p && !p.disposed && (keyDone || !!p.noOrderNeeded);
+      if (showBadge) {
+        const rb = document.createElement('div');
+        rb.className = 'ready-badge';
+        rb.textContent = '転帰可';
+        wrap.appendChild(rb);
+      }
+
       wrap.addEventListener("click", () => {
         if (state.selectedPatient && bedEmpty) { window.assignPatient(bed.id); return; }
         if (!bed.patient) return;

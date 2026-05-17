@@ -59,6 +59,7 @@ export function openSpop(staffId) {
       if (state.selectedBedId) renderDetail();
       closeSpop();
       showToast(`${st.short}を休憩させました`, "warn");
+      if (typeof window.checkTutEvent === 'function') window.checkTutEvent("staff_rested");
     };
   }
   document.getElementById("spop").style.display = "block";
@@ -77,6 +78,7 @@ export function assignStaff(staffId, bedId) {
   renderBeds();
   if (state.selectedBedId) renderDetail();
   showToast(`${st.short}（${st.roleLabel}）を${state.beds.find(b => b.id === bedId)?.label}に配置`);
+  if (typeof window.checkTutEvent === 'function') window.checkTutEvent("staff_placed");
 }
 
 export function removeStaff(staffId) {

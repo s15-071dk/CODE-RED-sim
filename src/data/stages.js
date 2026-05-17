@@ -8,6 +8,8 @@ export const TUT_STEPS = [
   { id: "drag",       icon: "👤", step: "STEP 1/5 — 患者割り当て", text: "左パネルの患者カードをクリックして選択し、次に空きベッドをクリックして割り当ててください。",        hint: "💡 カードをクリック → 空きベッドをクリック",   nextLabel: null,       waitFor: "assigned" },
   { id: "click_bed",  icon: "🛏️", step: "STEP 2/5 — ベッド確認",  text: "患者がベッドに入りました！\nベッドをクリックすると右側に詳細が表示されます。",                     hint: "💡 ベッドをクリックしてみましょう",       nextLabel: null,       waitFor: "bed_click" },
   { id: "order",      icon: "📋", step: "STEP 3/5 — オーダー",    text: "まず「点滴」をオーダーしてください。\n検査結果が🔴🟡🟢で返ってきます。",                          hint: "💡 点滴ボタンを押してください",           nextLabel: null,       waitFor: "ordered" },
+  { id: "staff_place", icon: "👩", step: "スタッフ配置",             text: "左パネルのスタッフ名をタップしてポップアップを開き、患者のいるベッドに配置してみましょう。配置すると検査・処置が速くなります。", hint: "💡 スタッフ名タップ → ベッドへの配置を選択", waitFor: "staff_placed" },
+  { id: "staff_rest",  icon: "☕", step: "休憩指示",                 text: "スタッフは働き続けると疲労します。疲労が溜まったら同じようにタップして「休憩させる」を選びましょう。疲労0%で自動復帰します。", hint: "💡 スタッフ名タップ → 休憩させる", waitFor: "staff_rested" },
   { id: "more_order", icon: "🔬", step: "STEP 4/5 — 追加検査",    text: "点滴をオーダーしました！\nもう1件、「心電図」か「血液検査」もオーダーしてみましょう。",              hint: "💡 2件完了で転帰が解放されます",          nextLabel: null,       waitFor: "two_orders" },
   { id: "disp",       icon: "🚪", step: "STEP 5/5 — 転帰の決定",  text: "検査結果を見て転帰を決定してください。\n🔴が多ければICU、全部🟢なら帰宅が推奨されます。",          hint: "💡 推奨ボタンがハイライトされます",       nextLabel: null,       waitFor: "disposed" },
   { id: "done",       icon: "🎉", step: "完了！",                  text: "チュートリアルを完了しました！\nステージ1が解放されます。",                                        hint: "",                                    nextLabel: "クリア！", waitFor: null },
@@ -36,10 +38,14 @@ export function setupTutorial() {
       disease: "fever",
     },
   ];
-  state.staffEnabled = false;
+  state.staffEnabled = true;
+  // チュートリアルは青木（n1）のみ
+  state.staffState = state.staffState
+    ? state.staffState.filter(s => s.id === "n1").map(s => ({ ...s, fatigue: 0, onBreak: false, assignedBedId: null, absent: false }))
+    : [];
   state.satEnabled   = false;
   state.callEnabled  = false;
-  document.getElementById("staff-panel").style.display = "none";
+  document.getElementById("staff-panel").style.display = "flex";
   document.getElementById("shift-wrap").style.display  = "none";
   document.getElementById("stage-lbl").textContent = "Tutorial";
   state.orderCountForTut = 0;
@@ -82,10 +88,13 @@ export function setupStage1() {
       },
     },
   ];
-  state.staffEnabled = false;
+  state.staffEnabled = true;
+  state.staffState = state.staffState
+    ? state.staffState.filter(s => s.id === "n1").map(s => ({ ...s, fatigue: 0, onBreak: false, assignedBedId: null, absent: false }))
+    : [];
   state.satEnabled   = true;
   state.callEnabled  = false;
-  document.getElementById("staff-panel").style.display = "none";
+  document.getElementById("staff-panel").style.display = "";
   document.getElementById("shift-wrap").style.display  = "flex";
   document.getElementById("stage-lbl").textContent = "Stage 1";
   document.getElementById("tut-nav").classList.remove("show");

@@ -62,6 +62,7 @@ function showStageSelect() {
     }
     list.appendChild(item);
   });
+  document.getElementById('title-screen').style.display = 'none';
   document.getElementById('stage-select-screen').style.display = 'flex';
 }
 
@@ -259,8 +260,9 @@ export function tryStage(stageName) {
 export function backToTitle() {
   if (state.mainLoop)  { clearInterval(state.mainLoop);  state.mainLoop  = null; }
   if (state.callTimer) { clearInterval(state.callTimer); state.callTimer = null; }
-  document.getElementById("game-screen").style.display  = "none";
-  document.getElementById("title-screen").style.display = "flex";
+  document.getElementById("game-screen").style.display        = "none";
+  document.getElementById("stage-select-screen").style.display = "none";
+  document.getElementById("title-screen").style.display        = "flex";
   ["screen-go", "screen-cl"].forEach(id => document.getElementById(id).classList.remove("show"));
   document.getElementById("call-overlay").classList.remove("active");
   state.currentStage = null;

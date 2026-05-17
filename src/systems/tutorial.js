@@ -59,10 +59,12 @@ export function checkTutEvent(event) {
   const step = TUT_STEPS[state.tutStepIdx];
   if (!step || !step.waitFor) return;
   let match = false;
-  if (step.waitFor === "assigned"   && event === "assigned")  match = true;
-  if (step.waitFor === "bed_click"  && event === "bed_click") match = true;
-  if (step.waitFor === "ordered"    && event === "ordered")   match = true;
-  if (step.waitFor === "two_orders" && event === "ordered" && state.orderCountForTut >= 2) match = true;
+  if (step.waitFor === "assigned"      && event === "assigned")      match = true;
+  if (step.waitFor === "bed_click"     && event === "bed_click")     match = true;
+  if (step.waitFor === "ordered"       && event === "ordered")       match = true;
+  if (step.waitFor === "two_orders"    && event === "ordered" && state.orderCountForTut >= 2) match = true;
+  if (step.waitFor === "staff_placed"  && event === "staff_placed")  match = true;
+  if (step.waitFor === "staff_rested"  && event === "staff_rested")  match = true;
   if (match) nextTutStep();
 }
 
