@@ -32,36 +32,8 @@ export function openSpop(staffId) {
   }
 
   const btn = document.getElementById("spop-btn");
-  if (st.absent) {
-    btn.textContent  = "欠勤のため操作不可";
-    btn.className    = "spop-btn";
-    btn.style.cssText = "background:#1e2736;color:#475569;";
-    btn.onclick      = null;
-  } else if (st.onBreak) {
-    btn.textContent  = "✓ 現場復帰させる";
-    btn.className    = "spop-btn spop-work";
-    btn.style.cssText = "";
-    btn.onclick      = () => {
-      st.onBreak = false;
-      renderStaffList();
-      closeSpop();
-      showToast(`${st.short}が現場復帰しました`);
-    };
-  } else {
-    btn.textContent  = "☕ 休憩させる（疲労回復）";
-    btn.className    = "spop-btn spop-break";
-    btn.style.cssText = "";
-    btn.onclick      = () => {
-      if (st.assignedBedId) st.assignedBedId = null;
-      st.onBreak = true;
-      renderStaffList();
-      renderBeds();
-      if (state.selectedBedId) renderDetail();
-      closeSpop();
-      showToast(`${st.short}を休憩させました`, "warn");
-      if (typeof window.checkTutEvent === 'function') window.checkTutEvent("staff_rested");
-    };
-  }
+  btn.style.display = "none";
+  btn.onclick = null;
   document.getElementById("spop").style.display = "block";
 }
 

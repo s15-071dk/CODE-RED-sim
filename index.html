@@ -28,15 +28,15 @@
         <div class="diff-name">かんたん</div>
         <div class="diff-desc">色と直感で判断。医療用語なし</div>
       </button>
-      <button class="diff-btn normal" onclick="setDifficulty('normal')">
-        <div class="diff-icon">🟡</div>
-        <div class="diff-name">ふつう</div>
-        <div class="diff-desc">簡単な説明付き</div>
-      </button>
       <button class="diff-btn hard" onclick="setDifficulty('hard')">
         <div class="diff-icon">🔴</div>
         <div class="diff-name">むずかしい</div>
         <div class="diff-desc">バイタル数値・医療用語フル</div>
+      </button>
+      <button class="diff-btn expert" id="diff-expert" onclick="setDifficulty('expert')" style="display:none;">
+        <div class="diff-icon">💀</div>
+        <div class="diff-name">超むずかしい</div>
+        <div class="diff-desc">推奨なし・ヒントなし</div>
       </button>
     </div>
   </div>
@@ -187,6 +187,16 @@
     <div class="story-body" id="story-body"></div>
     <div class="story-speaker" id="story-speaker"></div>
     <button class="story-start-btn" id="story-start-btn">🏥 シフト開始</button>
+  </div>
+</div>
+
+<!-- スタッフ選択画面 -->
+<div id="staff-select-screen" class="full-screen-overlay" style="display:none;">
+  <div class="staff-select-card">
+    <div class="staff-select-title">シフトメンバーを選ぶ</div>
+    <div id="staff-select-subtitle" class="staff-select-subtitle"></div>
+    <div id="staff-select-list" class="staff-select-list"></div>
+    <button id="staff-select-btn" class="staff-select-confirm" disabled>決定</button>
   </div>
 </div>
 

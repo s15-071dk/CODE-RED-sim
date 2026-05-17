@@ -326,8 +326,8 @@ export function setupStageReverse() {
     if (s.id === 'n1') s.fatigue = 50;
     if (s.id === 'n2') s.fatigue = 65;
     if (s.id === 'n3') s.fatigue = 40;
-    if (s.id === 'd1') s.fatigue = 55;
-    if (s.id === 'd2') s.fatigue = 78;
+    if (s.id === 'n4') s.fatigue = 55;
+    if (s.id === 'n5') s.fatigue = 78;
   });
 
   // 満足度を20%に直接設定
@@ -380,8 +380,8 @@ export function setupStage5() {
   state.stage5EventCount = 0;
   state.activeEvent    = null;
 
-  // 夜間単独シフト：n2・n3・d2 を不在扱い（青木 + 松本 の2名体制）
-  const absentIds = ['n2', 'n3', 'd2'];
+  // 夜間単独シフト：n2・n3・n5 を不在扱い（青木 + 田中 の2名体制）
+  const absentIds = ['n2', 'n3', 'n5'];
   state.staffState.forEach(s => {
     if (absentIds.includes(s.id)) { s.absent = true; return; }
     s.fatigueRate *= 1.4; // 夜間は疲弊しやすい
@@ -479,25 +479,24 @@ export const STAGES_META = [
   },
   {
     id: "stage4",
-    title: "Stage 4 — 研修医ローテ開始",
-    subtitle: "医師がチームに加わった",
-    description: "研修医がローテートで来てくれた。看護師2名＋研修医1名でチームを編成しよう。",
+    title: "Stage 4 — ベテランが加わった",
+    subtitle: "田中看護師がチームに",
+    description: "ベテランの田中看護師がシフトに入った。4名から3名を選んでチームを編成しよう。",
     beds: 6,
     staffMode: "select",
-    staffPool: ["n1", "n2", "n3", "d1", "d2"],
+    staffPool: ["n1", "n2", "n3", "n4"],
     staffCount: 3,
-    staffRule: "min1nurse_min1doctor",
     icon: "ti-stethoscope",
     unlockAfter: "stage3",
   },
   {
     id: "stage5",
-    title: "Stage 5 — 週末の繁忙期",
-    subtitle: "フルチームで乗り越えろ",
-    description: "週末で患者が急増。5名から3名を自由に選んでチームを組もう。",
+    title: "Stage 5 — フルチーム始動",
+    subtitle: "新人・西村も加わった",
+    description: "週末で患者が急増。新人の西村も加わりフルチーム5名体制。3名を選んで乗り切れ。",
     beds: 8,
     staffMode: "select",
-    staffPool: ["n1", "n2", "n3", "d1", "d2"],
+    staffPool: ["n1", "n2", "n3", "n4", "n5"],
     staffCount: 3,
     icon: "ti-calendar-week",
     unlockAfter: "stage4",
@@ -509,7 +508,7 @@ export const STAGES_META = [
     description: "頼りになる青木が不在。残り4名から3名を選んで乗り切ろう。",
     beds: 8,
     staffMode: "select",
-    staffPool: ["n2", "n3", "d1", "d2"],
+    staffPool: ["n2", "n3", "n4", "n5"],
     staffCount: 3,
     icon: "ti-user-off",
     unlockAfter: "stage5",
@@ -518,10 +517,10 @@ export const STAGES_META = [
     id: "stage7",
     title: "Stage 7 — 深夜のER",
     subtitle: "夜間単独シフト",
-    description: "深夜のER。スタッフは2名のみ。夜間イベントに備えよ。",
+    description: "深夜のER。スタッフは青木と田中の2名のみ。夜間イベントに備えよ。",
     beds: 8,
     staffMode: "fixed",
-    staffPool: ["n1", "d1"],
+    staffPool: ["n1", "n4"],
     staffCount: 2,
     icon: "ti-moon",
     unlockAfter: "stage6",
@@ -533,7 +532,7 @@ export const STAGES_META = [
     description: "外傷患者が集中する。CT故障イベントあり。チーム編成が鍵になる。",
     beds: 8,
     staffMode: "select",
-    staffPool: ["n1", "n2", "n3", "d1", "d2"],
+    staffPool: ["n1", "n2", "n3", "n4", "n5"],
     staffCount: 3,
     icon: "ti-ambulance",
     unlockAfter: "stage7",
@@ -545,7 +544,7 @@ export const STAGES_META = [
     description: "満足度20%・全床埋まりの状態で引き継ぎ。立て直せるか。",
     beds: 8,
     staffMode: "select",
-    staffPool: ["n1", "n2", "n3", "d1", "d2"],
+    staffPool: ["n1", "n2", "n3", "n4", "n5"],
     staffCount: 3,
     icon: "ti-urgent",
     unlockAfter: "stage8",
@@ -557,7 +556,7 @@ export const STAGES_META = [
     description: "引き継いだらスタッフ全員が疲弊状態(🟠)でスタート。休憩を上手く回しながら乗り切ろう。",
     beds: 8,
     staffMode: "select",
-    staffPool: ["n1", "n2", "n3", "d1", "d2"],
+    staffPool: ["n1", "n2", "n3", "n4", "n5"],
     staffCount: 3,
     startFatigue: 75,
     icon: "ti-battery-2",
@@ -570,7 +569,7 @@ export const STAGES_META = [
     description: "フルチーム5名全員投入。フェーズが加速し続ける。ハイスコアを目指せ。",
     beds: 8,
     staffMode: "fixed",
-    staffPool: ["n1", "n2", "n3", "d1", "d2"],
+    staffPool: ["n1", "n2", "n3", "n4", "n5"],
     staffCount: 5,
     icon: "ti-infinity",
     unlockAfter: "stage10",

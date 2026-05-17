@@ -13,6 +13,9 @@ import { openSpop, closeSpop, assignStaff, removeStaff } from './ui/modals.js';
 import { selectPatientForAssign, assignPatient } from './ui/dragDrop.js';
 import { pickRandom } from './utils/random.js';
 
+// スタッフ選択画面からの選択結果を一時保持
+let _pendingStaffIds = null;
+
 // tutorial.js から completeTutorial が window._triggerClear を使うため公開
 window._triggerClear = triggerClear;
 
@@ -35,6 +38,12 @@ export function markStageCleared(stageId) {
   if (!cleared.includes(stageId)) {
     cleared.push(stageId);
     localStorage.setItem('clearedStages', JSON.stringify(cleared));
+  }
+  // stageEクリアで超むずかしい解放
+  if (stageId === 'stageE') {
+    localStorage.setItem('expert_unlocked', '1');
+    const btn = document.getElementById('diff-expert');
+    if (btn) btn.style.display = '';
   }
 }
 
@@ -121,6 +130,15 @@ export function resetGame() {
 export function startStage(stageName) {
   state.currentStage = stageName;
   resetGame();
+
+  // スタッフ選択画面で選ばれなかったスタッフを不在扱いにする
+  if (_pendingStaffIds) {
+    state.staffState.forEach(s => {
+      if (!_pendingStaffIds.includes(s.id)) s.absent = true;
+    });
+    _pendingStaffIds = null;
+  }
+
   document.getElementById("title-screen").style.display = "none";
   document.getElementById("game-screen").style.display  = "flex";
 
@@ -219,10 +237,58 @@ function showStoryScreen(stageName) {
   const btn = document.getElementById("story-start-btn");
   btn.onclick = () => {
     document.getElementById("story-screen").classList.remove("show");
-    startStage(stageName);
+    const meta = STAGES_META.find(m => m.id === stageName);
+    if (meta && meta.staffMode === "select") {
+      showStaffSelect(meta, () => startStage(stageName));
+    } else {
+      startStage(stageName);
+    }
   };
 
   document.getElementById("story-screen").classList.add("show");
+}
+
+function showStaffSelect(meta, onConfirm) {
+  const screen   = document.getElementById("staff-select-screen");
+  const subtitle = document.getElementById("staff-select-subtitle");
+  const list     = document.getElementById("staff-select-list");
+  const btn      = document.getElementById("staff-select-btn");
+
+  subtitle.textContent = `${meta.staffPool.length}名から${meta.staffCount}名を選んでください`;
+  list.innerHTML = "";
+  const selected = new Set();
+
+  meta.staffPool.forEach(id => {
+    const def = STAFF_DEFS.find(d => d.id === id);
+    if (!def) return;
+    const card = document.createElement("div");
+    card.className = "staff-sel-card";
+    card.innerHTML = `
+      <div class="staff-sel-name">${def.name}</div>
+      <div class="staff-sel-role">${def.roleLabel}</div>
+      <div class="staff-sel-trait">${def.trait}</div>
+    `;
+    card.onclick = () => {
+      if (selected.has(id)) {
+        selected.delete(id);
+        card.classList.remove("selected");
+      } else if (selected.size < meta.staffCount) {
+        selected.add(id);
+        card.classList.add("selected");
+      }
+      btn.disabled = selected.size !== meta.staffCount;
+    };
+    list.appendChild(card);
+  });
+
+  btn.disabled = true;
+  btn.onclick = () => {
+    _pendingStaffIds = [...selected];
+    screen.style.display = "none";
+    onConfirm();
+  };
+
+  screen.style.display = "flex";
 }
 
 export function tryStage(stageName) {
@@ -297,7 +363,7 @@ function triggerIncident(staff, bed) {
   state.score = Math.max(0, state.score - 30);
   document.getElementById("score-disp").textContent = state.score.toLocaleString();
   showAlert(`⚠ インシデント！${staff.short}（${staff.roleLabel}）がミス（−30pt）`);
-  showToast(`${staff.short}を休憩させてください`, "err");
+  showToast(`${staff.short}の疲労が限界に近づいています`, "err");
 }
 
 // ===== Stage4 ランダムイベント =====
@@ -397,6 +463,18 @@ export function gameLoop() {
         const bed   = state.beds.find(b => b.id === st.assignedBedId);
         const heavy = bed && bed.patient && bed.patient.color === "red";
         st.fatigue  = Math.min(100, st.fatigue + 1.8 * st.fatigueRate * (heavy ? 1.5 : 1));
+        if (!st.onBreak && !st.absent && st.fatigue >= 100) {
+          st.fatigue = 100;
+          if (st.assignedBedId) st.assignedBedId = null;
+          st.onBreak = true;
+          renderStaffList();
+          renderBeds();
+          if (state.selectedBedId) renderDetail();
+          logMsg('nurse', `${st.short}「もう限界です…少し休ませてください」`);
+          showToast(`${st.short}が限界に達し休憩に入りました`, "warn");
+          if (typeof window.checkTutEvent === 'function') window.checkTutEvent("staff_rested");
+          return;
+        }
         const fs    = fatigueState(st.fatigue);
         if (fs.incidentChance > 0 && Math.random() < fs.incidentChance && bed && bed.patient && !bed.patient.disposed) {
           triggerIncident(st, bed);
@@ -406,10 +484,29 @@ export function gameLoop() {
     renderStaffList();
   }
 
+  // 悪化システム：オーダーなし60秒でトリアージ1段階エスカレーション
+  const ESCALATE_MAP = { green: "yellow", yellow: "orange", orange: "red" };
+
   let critAlert = null;
   state.beds.forEach(bed => {
     if (!bed.patient || bed.patient.disposed) return;
     const p  = bed.patient;
+
+    if (!p.noOrderNeeded && p.color !== "red" && !(p.orders && p.orders.length > 0)) {
+      p.waitSeconds = (p.waitSeconds || 0) + 2;
+      if (p.waitSeconds >= 60 && ESCALATE_MAP[p.color]) {
+        const prev = p.color;
+        p.color       = ESCALATE_MAP[p.color];
+        p.waitSeconds = 0;
+        logMsg('alert', `⚠️ ${p.name} — 対応遅延：トリアージ ${prev} → ${p.color} に悪化`);
+        if (state.satEnabled) changeSat(-5);
+        renderBeds();
+        renderWaitList();
+      }
+    } else {
+      p.waitSeconds = 0;
+    }
+
     const dr = v => +(v + (Math.random() - 0.5) * 0.4).toFixed(1);
     const iv = p.ivOrdered ? 0.5 : 1;
     p.HR    = Math.min(180, Math.max(30,  Math.round(p.HR    + dr(({ red: 2,    orange: 1,   yellow: 0, green: 0 }[p.color] || 0) * iv))));
@@ -566,10 +663,17 @@ window.resetProgress = () => {
   console.info('[DEV] Progress reset');
 };
 
+// ページ読み込み時に超むずかしい解放状態をチェック
+if (localStorage.getItem('expert_unlocked')) {
+  const btn = document.getElementById('diff-expert');
+  if (btn) btn.style.display = '';
+}
+
 Object.assign(window, {
   startStage,
   tryStage,
   showStoryScreen,
+  showStaffSelect,
   backToTitle,
   togglePause,
   togglePanel,

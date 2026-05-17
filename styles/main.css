@@ -38,6 +38,7 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .diff-btn.active.easy{background:#0f2e1a;border-color:#22c55e;box-shadow:0 0 12px rgba(34,197,94,0.2);}
 .diff-btn.active.normal{background:#1a2744;border-color:#60a5fa;box-shadow:0 0 12px rgba(96,165,250,0.2);}
 .diff-btn.active.hard{background:#2d0f0f;border-color:#ef4444;box-shadow:0 0 12px rgba(239,68,68,0.2);}
+.diff-btn.active.expert{background:#1a0a2e;border-color:#a855f7;box-shadow:0 0 12px rgba(168,85,247,0.3);}
 .diff-icon{font-size:20px;margin-bottom:4px;}
 .diff-name{font-size:12px;font-weight:700;margin-bottom:2px;}
 .diff-desc{font-size:9px;color:#64748b;line-height:1.3;}
@@ -151,9 +152,9 @@ body[data-sat-level="low"] .sat-bar .sat-fill, body[data-sat-level="low"] .sat-w
 .rb-ns{background:#1e3a5f;color:#93c5fd;}
 .rb-d2{background:#2d1b4e;color:#c4b5fd;}
 .rb-d1{background:#3b1f6b;color:#ddd6fe;}
-.ss-row{font-size:8px;color:#475569;margin-top:2px;display:flex;align-items:center;gap:4px;}
-.ft{flex:1;height:4px;background:#111827;border-radius:2px;overflow:hidden;}
-.ff{height:100%;border-radius:2px;transition:width 0.5s;}
+.ss-row{font-size:8px;color:#475569;margin-top:3px;display:flex;align-items:center;gap:4px;}
+.ft{flex:1;height:7px;background:#111827;border-radius:4px;overflow:hidden;}
+.ff{height:100%;border-radius:4px;transition:width 0.5s;}
 
 /* ===== ERエリア ===== */
 .er-area{background:#151c2b;width:355px;flex-shrink:0;padding:9px 11px;display:flex;flex-direction:column;gap:7px;overflow:hidden;position:relative;}
@@ -550,4 +551,90 @@ body[data-sat-level="low"] .sat-bar .sat-fill, body[data-sat-level="low"] .sat-w
   .stage-select-card { padding:16px; gap:8px; }
   .stage-item-title { font-size:10px; }
   .stage-item-subtitle { font-size:9px; }
+}
+
+/* ===== スタッフ選択画面 ===== */
+.staff-select-card {
+  background: #131c2e;
+  border-radius: 12px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.staff-select-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f1f5f9;
+  text-align: center;
+}
+
+.staff-select-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+}
+
+.staff-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.staff-sel-card {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #2d3748;
+  background: #1e2736;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.staff-sel-card.selected {
+  border-color: #60a5fa;
+  background: #1a2845;
+}
+
+.staff-sel-card:hover {
+  border-color: #475569;
+}
+
+.staff-sel-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.staff-sel-role {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.staff-sel-trait {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.staff-select-confirm {
+  padding: 10px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.staff-select-confirm:disabled {
+  background: #1e2736;
+  color: #475569;
+  cursor: not-allowed;
 }

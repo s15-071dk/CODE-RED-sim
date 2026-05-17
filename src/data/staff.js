@@ -2,8 +2,8 @@ export const STAFF_DEFS = [
   { id: "n1", name: "青木 沙耶",  short: "青木", role: "nurse",  roleLabel: "看護師（チーフ）", roleShort: "Ns チーフ", rbCls: "rb-hn", fatigueRate: 0.65, recoveryRate: 1.1, trait: "重症患者に強い。疲れにくい" },
   { id: "n2", name: "林 美咲",    short: "林",   role: "nurse",  roleLabel: "看護師",           roleShort: "Ns",       rbCls: "rb-ns", fatigueRate: 1.0,  recoveryRate: 1.6, trait: "複数対応が得意。回復が速い" },
   { id: "n3", name: "中川 遥",    short: "中川", role: "nurse",  roleLabel: "看護師",           roleShort: "Ns",       rbCls: "rb-ns", fatigueRate: 1.4,  recoveryRate: 1.0, trait: "検査サポートが速い。疲れやすい" },
-  { id: "d1", name: "松本 拓海",  short: "松本", role: "doctor", roleLabel: "研修医 2年目",     roleShort: "Dr 2年目", rbCls: "rb-d2", fatigueRate: 1.0,  recoveryRate: 1.0, trait: "バランス型。安定した対応" },
-  { id: "d2", name: "小野 結衣",  short: "小野", role: "doctor", roleLabel: "研修医 1年目",     roleShort: "Dr 1年目", rbCls: "rb-d1", fatigueRate: 1.5,  recoveryRate: 0.7, trait: "処置が速いがミスしやすい" },
+  { id: "n4", name: "田中 恵",    short: "田中", role: "nurse",  roleLabel: "看護師（ベテラン）", roleShort: "Ns ベテラン", rbCls: "rb-hn", fatigueRate: 0.7, recoveryRate: 1.2, trait: "ベテランで安定。疲れにくく頼れる" },
+  { id: "n5", name: "西村 蓮",    short: "西村", role: "nurse",  roleLabel: "看護師（新人）",     roleShort: "Ns 新人",    rbCls: "rb-ns", fatigueRate: 1.6, recoveryRate: 1.8, trait: "元気いっぱい。回復が速いが疲れやすい" },
 ];
 
 export const STAFF_SPEECH = {
@@ -22,22 +22,22 @@ export const STAFF_SPEECH = {
     critical: ["先生、値が悪化してます", "急いでください！", "バイタル要注意です"],
     order:    ["受け付けました", "処理します", "わかりました"],
   },
-  d1: {
-    assign:   ["松本です。一緒に診ましょう", "確認しました。介入します", "状況把握、対応します"],
-    critical: ["先生、緊急対応が必要です", "バイタル悪化中です", "早急に動きます"],
-    order:    ["オーダー確認しました", "実施します", "了解です"],
+  n4: {
+    assign:   ["田中です。任せてください", "了解、対応します", "ベテランの意地を見せます"],
+    critical: ["先生、バイタルが危険域です", "すぐ介入が必要です", "急いでください！"],
+    order:    ["了解しました", "すぐ対応します", "処理します"],
   },
-  d2: {
-    assign:   ["小野です、担当します！", "わかりました！", "対応始めます！"],
-    critical: ["先生これ…やばいですよね！？", "急いだほうがいいですよね", "どうしますか！？"],
-    order:    ["は、はい！やります！", "了解です！", "すぐやります！"],
+  n5: {
+    assign:   ["西村です！頑張ります！", "は、はい！担当します！", "やります！"],
+    critical: ["せ、先生！大変です！", "どうすれば…！", "バイタルが…！"],
+    order:    ["頑張ります！", "やってみます！", "は、はい！"],
   },
 };
 
 export function fatigueState(f) {
-  if (f < 40) return { label: "元気",     icon: "🟢", color: "#22c55e", speedMult: 1.0, incidentChance: 0 };
-  if (f < 70) return { label: "疲労気味", icon: "🟡", color: "#eab308", speedMult: 0.8, incidentChance: 0 };
-  if (f < 90) return { label: "疲弊",     icon: "🟠", color: "#f97316", speedMult: 0.6, incidentChance: 0.05 };
+  if (f < 40) return { label: "元気",     icon: "🟢", color: "#22c55e", speedMult: 1.5, incidentChance: 0 };
+  if (f < 70) return { label: "疲労気味", icon: "🟡", color: "#eab308", speedMult: 1.1, incidentChance: 0 };
+  if (f < 90) return { label: "疲弊",     icon: "🟠", color: "#f97316", speedMult: 0.7, incidentChance: 0.05 };
   return             { label: "限界",      icon: "🔴", color: "#ef4444", speedMult: 0.4, incidentChance: 0.15 };
 }
 

@@ -28,14 +28,14 @@ export function makeVitalHtml(p) {
   const aBP = p.BP_sys < 90;
   const aSp = p.SpO2 < 95;
 
-  if (state.difficulty === 'normal') {
+  if (state.difficulty === 'hard' || state.difficulty === 'normal' || state.difficulty === 'expert') {
     return `<div class="vgrid">
-      <div class="vbox ${aHR ? 'w' : ''}"><div class="vlbl">脈拍</div><div class="vval${aHR ? ' ab' : ''}"><span style="font-size:9px;">${hrS.icon}</span> ${p.HR}<span class="vunit"> bpm・${hrS.label}</span></div></div>
-      <div class="vbox ${aBP ? 'w' : ''}"><div class="vlbl">血圧</div><div class="vval${aBP ? ' ab' : ''}"><span style="font-size:9px;">${bpS.icon}</span> ${p.BP_sys}/${p.BP_dia}<span class="vunit"> mmHg・${bpS.label}</span></div></div>
-      <div class="vbox ${aSp ? 'w' : ''}"><div class="vlbl">酸素飽和度</div><div class="vval${aSp ? ' ab' : ''}"><span style="font-size:9px;">${spS.icon}</span> ${p.SpO2}<span class="vunit"> %・${spS.label}</span></div></div>
-      <div class="vbox"><div class="vlbl">意識</div><div class="vval" style="color:${gcS.c};"><span style="font-size:9px;">${gcS.icon}</span> ${gcS.label}<span class="vunit"> (GCS ${p.GCS})</span></div></div>
-      <div class="vbox"><div class="vlbl">呼吸数</div><div class="vval"><span style="font-size:9px;">${rrS.icon}</span> ${p.RR}<span class="vunit"> /min・${rrS.label}</span></div></div>
-      <div class="vbox"><div class="vlbl">体温</div><div class="vval"><span style="font-size:9px;">${tpS.icon}</span> ${tmp.toFixed(1)}<span class="vunit"> °C・${tpS.label}</span></div></div>
+      <div class="vbox ${aHR ? 'w' : ''}"><div class="vlbl">HR</div><div class="vval${aHR ? ' ab' : ''}">${p.HR}<span class="vunit">bpm</span></div></div>
+      <div class="vbox ${aBP ? 'w' : ''}"><div class="vlbl">BP</div><div class="vval${aBP ? ' ab' : ''}">${p.BP_sys}/${p.BP_dia}<span class="vunit">mmHg</span></div></div>
+      <div class="vbox ${aSp ? 'w' : ''}"><div class="vlbl">SpO₂</div><div class="vval${aSp ? ' ab' : ''}">${p.SpO2}<span class="vunit">%</span></div></div>
+      <div class="vbox"><div class="vlbl">GCS</div><div class="vval">${p.GCS}<span class="vunit">/15</span></div></div>
+      <div class="vbox"><div class="vlbl">RR</div><div class="vval">${p.RR}<span class="vunit">/min</span></div></div>
+      <div class="vbox"><div class="vlbl">体温</div><div class="vval">${tmp.toFixed(1)}<span class="vunit">°C</span></div></div>
     </div>`;
   }
 
@@ -50,7 +50,6 @@ export function makeVitalHtml(p) {
 }
 
 export function waitVitals(p) {
-  if (state.difficulty === 'hard')   return `<span class="vbadge hr">HR${p.HR}</span><span class="vbadge bp">BP${p.BP_sys}</span><span class="vbadge spo2">SpO₂${p.SpO2}%</span>`;
-  if (state.difficulty === 'normal') return `<span class="vbadge hr">脈${p.HR}</span><span class="vbadge bp">血圧${p.BP_sys}</span><span class="vbadge spo2">酸素${p.SpO2}%</span>`;
+  if (state.difficulty === 'hard' || state.difficulty === 'normal' || state.difficulty === 'expert') return `<span class="vbadge hr">HR${p.HR}</span><span class="vbadge bp">BP${p.BP_sys}</span><span class="vbadge spo2">SpO₂${p.SpO2}%</span>`;
   return '';
 }
