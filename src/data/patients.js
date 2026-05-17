@@ -139,6 +139,34 @@ export const CALL_PATIENTS = [
     color: "orange", HR: 106, BP_sys: 108, BP_dia: 66, SpO2: 94, GCS: 15, RR: 22, Temp: 39.0,
     disease: "fever",
   },
+  {
+    name: "榊原 俊介", age: 48, sex: "男性", chief: "呼吸困難・全身蕁麻疹・血圧低下",
+    vitals: "HR 136 / BP 78/44 / SpO₂ 89%", triage: "赤（Level 1）", scene: "蜂刺傷後5分で急変。気道狭窄疑い、会話困難です。",
+    eta: 4, dist: "約2.4km",
+    color: "red", HR: 136, BP_sys: 78, BP_dia: 44, SpO2: 89, GCS: 12, RR: 32, Temp: 36.8,
+    disease: "anaphylaxis",
+  },
+  {
+    name: "藤森 彩乃", age: 29, sex: "女性", chief: "口唇腫脹・掻痒感・軽度呼吸苦",
+    vitals: "HR 114 / BP 102/64 / SpO₂ 94%", triage: "橙（Level 2）", scene: "食事後に発症。意識清明ですが、急速悪化の可能性があります。",
+    eta: 7, dist: "約5.2km",
+    color: "orange", HR: 114, BP_sys: 102, BP_dia: 64, SpO2: 94, GCS: 14, RR: 24, Temp: 36.9,
+    disease: "anaphylaxis",
+  },
+  {
+    name: "奥村 仁", age: 67, sex: "男性", chief: "吐血・下血・顔面蒼白",
+    vitals: "HR 134 / BP 76/42 / SpO₂ 93%", triage: "赤（Level 1）", scene: "自宅トイレで倒れているところを家族が発見。冷汗著明で反応が鈍いです。",
+    eta: 5, dist: "約3.3km",
+    color: "red", HR: 134, BP_sys: 76, BP_dia: 42, SpO2: 93, GCS: 12, RR: 28, Temp: 36.2,
+    disease: "gi_bleed",
+  },
+  {
+    name: "相沢 真紀", age: 58, sex: "女性", chief: "黒色便が続く・嘔気",
+    vitals: "HR 106 / BP 100/62 / SpO₂ 96%", triage: "橙（Level 2）", scene: "3日前から黒色便が続き、本日めまいが強くなり来院要請です。",
+    eta: 8, dist: "約6.0km",
+    color: "orange", HR: 106, BP_sys: 100, BP_dia: 62, SpO2: 96, GCS: 14, RR: 20, Temp: 36.5,
+    disease: "gi_bleed",
+  },
 ];
 
 export const CALL_UNITS = [
@@ -252,5 +280,122 @@ export const STAGE4_POOL = [
     chief: "擦り傷・打撲", color: "green",
     HR: 86, BP_sys: 124, BP_dia: 78, SpO2: 100, GCS: 15, RR: 15, Temp: 36.7,
     disease: "minor", noOrderNeeded: true,
+  },
+];
+
+// Stage 5 — 夜間単独シフト患者プール
+export const STAGE5_POOL = [
+  // ===== 赤 (red) × 5 =====
+  {
+    id: "s5-pool-1", name: "戸崎 守", age: 78, sex: "男性", pmh: "糖尿病・慢性腎臓病",
+    chief: "高熱・意識混濁・血圧低下", color: "red",
+    HR: 138, BP_sys: 74, BP_dia: 40, SpO2: 88, GCS: 10, RR: 34, Temp: 40.4,
+    disease: "sepsis",
+    story: "夜中に突然ぐったりして…呼んでも反応が薄くて怖かったです",
+    callBack: {
+      correct:   "📞 戸崎さんのご家族から：ICUで抗菌薬治療が始まり、少しずつ意識が戻っています",
+      incorrect: "⚠ 戸崎さんは帰宅後に意識を失い、重症敗血症性ショックで緊急再搬送されました",
+    },
+  },
+  {
+    id: "s5-pool-2", name: "宮本 志保", age: 32, sex: "女性", pmh: "食物アレルギー（甲殻類）",
+    chief: "呼吸困難・顔面浮腫・蕁麻疹", color: "red",
+    HR: 144, BP_sys: 70, BP_dia: 38, SpO2: 87, GCS: 14, RR: 36, Temp: 37.2,
+    disease: "anaphylaxis",
+    story: "夕食に海鮮を少し食べて…すぐに体中がかゆくなって息ができなくなりました",
+    callBack: {
+      correct:   "📞 宮本さんから：エピペン処方してもらいました。次からは必ず持ち歩きます",
+      incorrect: "⚠ 宮本さんは帰宅後に再度アナフィラキシーを起こし、救急再搬送されました",
+    },
+  },
+  {
+    id: "s5-pool-3", name: "江藤 三郎", age: 65, sex: "男性", pmh: "胃潰瘍・NSAIDs常用",
+    chief: "吐血・血圧低下・冷汗", color: "red",
+    HR: 136, BP_sys: 72, BP_dia: 42, SpO2: 91, GCS: 13, RR: 28, Temp: 36.1,
+    disease: "gi_bleed",
+    story: "夜中に真っ黒い血を吐いて…頭がふらふらして立てなかったです",
+    callBack: {
+      correct:   "📞 江藤さんから：緊急内視鏡で止血できました。先生に来てもらえてよかったです",
+      incorrect: "⚠ 江藤さんは帰宅後に大量出血を起こし、出血性ショックで緊急再搬送されました",
+    },
+  },
+  {
+    id: "s5-pool-4", name: "石橋 節雄", age: 70, sex: "男性", pmh: "高血圧・喫煙歴・脂質異常症",
+    chief: "胸痛・冷汗・呼吸困難", color: "red",
+    HR: 128, BP_sys: 76, BP_dia: 44, SpO2: 90, GCS: 13, RR: 28, Temp: 36.3,
+    disease: "acs",
+    story: "夜中の2時頃に急に胸が締め付けられて…妻が救急車を呼んでくれました",
+    callBack: {
+      correct:   "📞 石橋さんの奥さんから：カテーテル治療で血流が戻り、峠は越えたと言われました",
+      incorrect: "⚠ 石橋さんは帰宅後に心停止寸前の状態で再搬送。緊急カテーテルが必要でした",
+    },
+  },
+  {
+    id: "s5-pool-5", name: "荒木 涼", age: 25, sex: "男性", pmh: "なし",
+    chief: "交通事故後・胸腹部痛・呼吸苦", color: "red",
+    HR: 140, BP_sys: 78, BP_dia: 44, SpO2: 88, GCS: 12, RR: 32, Temp: 35.8,
+    disease: "trauma",
+    story: "自転車で走っていたら…急に車に追突されて気づいたら地面にいました",
+    callBack: {
+      correct:   "📞 荒木さんから：手術で内臓の止血できました。先生のおかげです",
+      incorrect: "⚠ 荒木さんは帰宅後に腹腔内出血が悪化し、緊急手術が必要な状態で再搬送されました",
+    },
+  },
+  // ===== 橙 (orange) × 3 =====
+  {
+    id: "s5-pool-6", name: "秋山 和子", age: 68, sex: "女性", pmh: "高血圧・慢性片頭痛",
+    chief: "激しい頭痛・嘔吐・視力障害", color: "orange",
+    HR: 98, BP_sys: 208, BP_dia: 118, SpO2: 96, GCS: 14, RR: 20, Temp: 36.9,
+    disease: "bp",
+    story: "夜中にいつもと違う頭痛で目が覚めて…ものがぼやけて見えるんです",
+    callBack: {
+      correct:   "📞 秋山さんから：入院して降圧治療で視力も戻ってきました。ありがとうございます",
+      incorrect: "⚠ 秋山さんは帰宅後に脳出血を起こし、緊急手術が必要な状態で再搬送されました",
+    },
+  },
+  {
+    id: "s5-pool-7", name: "浅野 啓太", age: 55, sex: "男性", pmh: "胆石症・糖尿病",
+    chief: "右上腹部痛・発熱・黄疸", color: "orange",
+    HR: 118, BP_sys: 96, BP_dia: 60, SpO2: 95, GCS: 15, RR: 22, Temp: 39.3,
+    disease: "abdo",
+    story: "晩御飯の後から脇腹が痛くて…目が黄色くなってると妻に言われて",
+    callBack: {
+      correct:   "📞 浅野さんから：胆管炎の治療で落ち着きました。入院でよかったです",
+      incorrect: "⚠ 浅野さんは帰宅後に敗血症性ショックへ移行し、ICU入室が必要な状態で再搬送されました",
+    },
+  },
+  {
+    id: "s5-pool-8", name: "西田 康子", age: 45, sex: "女性", pmh: "なし",
+    chief: "高熱・激しい咳・呼吸苦", color: "orange",
+    HR: 120, BP_sys: 100, BP_dia: 64, SpO2: 92, GCS: 15, RR: 28, Temp: 39.8,
+    disease: "fever",
+    story: "3日前から咳が続いていたんですが…夜になって急に息苦しくなりました",
+    callBack: {
+      correct:   "📞 西田さんから：入院で酸素投与を受けて呼吸が楽になってきました",
+      incorrect: "⚠ 西田さんは帰宅後に低酸素血症が悪化し、挿管が必要な状態で再搬送されました",
+    },
+  },
+  // ===== 緑 (green) × 2 =====
+  {
+    id: "s5-pool-9", name: "原田 義之", age: 22, sex: "男性", pmh: "なし",
+    chief: "転倒・頭部打撲・擦過傷", color: "green",
+    HR: 84, BP_sys: 122, BP_dia: 76, SpO2: 99, GCS: 15, RR: 16, Temp: 36.6,
+    disease: "minor", noOrderNeeded: true,
+    story: "お酒を飲んで歩いていたら転んで…頭を打ったみたいで心配で来ました",
+    callBack: {
+      correct:   "📞 原田さんから：翌日も頭痛なく問題ありませんでした。様子見で正解でした",
+      incorrect: "⚠ 原田さんから：検査が多くて…軽い打撲でもこんなに大事になるとは思いませんでした",
+    },
+  },
+  {
+    id: "s5-pool-10", name: "坂本 悦子", age: 38, sex: "女性", pmh: "なし",
+    chief: "嘔吐・下痢・軽度発熱", color: "green",
+    HR: 88, BP_sys: 118, BP_dia: 74, SpO2: 98, GCS: 15, RR: 16, Temp: 37.8,
+    disease: "fever",
+    story: "夕飯の後から何度も吐いて…子供も熱を出しているし不安で来ました",
+    callBack: {
+      correct:   "📞 坂本さんから：処方の整腸剤でよくなりました。迅速な対応ありがとうございました",
+      incorrect: "⚠ 坂本さんから：入院になって子供の世話ができなくて困っています…",
+    },
   },
 ];

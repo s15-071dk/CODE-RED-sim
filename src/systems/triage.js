@@ -11,10 +11,10 @@ export const TRIAGE_BDR = { red: "#ef4444", orange: "#f97316", yellow: "#eab308"
 export const TRIAGE_LV  = { red: "lv1",     orange: "lv2",     yellow: "lv4",     green: "lv3" };
 
 export const ORDERS = [
-  { id: "iv",    label: "点滴",     icon: "ti-droplet",           time: 5 },
-  { id: "blood", label: "血液検査", icon: "ti-test-pipe",         time: 15 },
-  { id: "ecg",   label: "心電図",   icon: "ti-heart-rate-monitor",time: 6 },
-  { id: "echo",  label: "エコー",   icon: "ti-wave-saw-tool",     time: 12 },
-  { id: "xray",  label: "X線",     icon: "ti-scan",              time: 10 },
-  { id: "ct",    label: "CT",      icon: "ti-circle-dotted",     time: 20 },
+  { id: "iv",    label: "点滴",     icon: "ti-droplet",            time: 8  },
+  { id: "blood", label: "血液検査", icon: "ti-test-pipe",          time: 22 },
+  { id: "ecg",   label: "心電図",   icon: "ti-heart-rate-monitor", time: 10 },
+  { id: "echo",  label: "エコー",   icon: "ti-wave-saw-tool",      time: 18 },
+  { id: "xray",  label: "X線",     icon: "ti-scan",               time: 14 },
+  { id: "ct",    label: "CT",      icon: "ti-circle-dotted",      time: 30 },
 ];

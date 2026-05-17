@@ -43,6 +43,7 @@ export function acceptCall() {
     showToast(`${p.name}が到着 — ベッドへ割り当ててください`, "warn");
     state.score += 50;
     document.getElementById("score-disp").textContent = state.score.toLocaleString();
+    changeSat(3);
     logMsg('system', '🚑 搬送承諾 — ' + p.name + ' / ' + p.chief);
   }
   state._pendingCall = null;

@@ -26,9 +26,6 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .lock-icon{font-size:20px;color:#334155;}
 .title-note{margin-top:20px;font-size:10px;color:#334155;}
 /* ===== 患者割り当てボタン ===== */
-.assign-btn{display:block;width:100%;margin-top:5px;padding:4px 0;border-radius:4px;border:0.5px solid #3b82f6;background:#1a2744;color:#60a5fa;font-size:9px;font-weight:600;cursor:pointer;letter-spacing:0.5px;}
-.assign-btn:hover{background:#1e3a6e;}
-.assign-btn.selected{border-color:#f97316;background:#2d1f0a;color:#fb923c;}
 .bed-wrap.assign-target .drop-ring{display:block!important;}
 .bed-wrap.assign-target{cursor:pointer;}
 
@@ -46,6 +43,20 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .diff-desc{font-size:9px;color:#64748b;line-height:1.3;}
 .diff-btn.active .diff-desc{color:#94a3b8;}
 
+/* ===== ステージ選択画面 ===== */
+.full-screen-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:100;}
+.stage-select-card{width:min(560px,calc(100vw - 32px));background:#111827;border:0.5px solid #2d3748;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:12px;max-height:calc(100dvh - 48px);overflow-y:auto;}
+.stage-select-title{font-size:14px;font-weight:700;color:#f1f5f9;letter-spacing:0.5px;}
+.stage-list{display:flex;flex-direction:column;gap:6px;}
+.stage-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;border:0.5px solid #2d3748;background:#1e2736;cursor:pointer;transition:border-color 0.15s,background 0.15s;}
+.stage-item:hover:not(.locked){border-color:#60a5fa;background:#1a2845;}
+.stage-item.locked{opacity:0.4;cursor:not-allowed;}
+.stage-item-icon{font-size:18px;color:#60a5fa;flex-shrink:0;width:24px;text-align:center;}
+.stage-item-body{flex:1;min-width:0;}
+.stage-item-title{font-size:11px;font-weight:600;color:#f1f5f9;}
+.stage-item-subtitle{font-size:10px;color:#64748b;margin-top:1px;}
+.stage-item-lock{font-size:12px;color:#334155;flex-shrink:0;}
+
 /* ===== ゲーム画面 ===== */
 #game-screen{display:none;flex-direction:column;height:100vh;}
 .top-bar{background:#111827;border-bottom:1px solid #2d3748;display:flex;align-items:center;gap:8px;padding:6px 14px;height:44px;flex-shrink:0;}
@@ -54,13 +65,15 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .top-stat .lbl{font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;}
 .top-stat .val{font-size:11px;font-weight:500;color:#f1f5f9;}
 .top-stat .val.red{color:#ef4444;}.top-stat .val.grn{color:#22c55e;}
-.sat-wrap{display:flex;flex-direction:column;gap:2px;min-width:130px;max-width:160px;}
-.sat-lbl-row{display:flex;justify-content:space-between;align-items:center;}
-.sat-lbl{font-size:8px;color:#94a3b8;letter-spacing:0.3px;white-space:nowrap;}
-.sat-pct{font-size:9px;font-weight:700;white-space:nowrap;}
-.sat-track{width:100%;height:13px;background:#0f172a;border-radius:3px;border:1px solid #2d3748;overflow:hidden;position:relative;}
-.sat-fill{height:100%;transition:width 0.6s,background 0.6s;}
-.sat-track::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent calc(25% - 1px),rgba(15,23,42,0.7) calc(25% - 1px),rgba(15,23,42,0.7) 25%);pointer-events:none;}
+.sat-bar, .sat-wrap{display:flex;align-items:center;gap:10px;width:100%;padding:0 14px;height:20px;background:#111827;border-bottom:1px solid #2d3748;flex-shrink:0;}
+.sat-bar .sat-lbl, .sat-wrap .sat-lbl{font-size:10px;color:#94a3b8;letter-spacing:0.3px;white-space:nowrap;flex-shrink:0;}
+.sat-bar .sat-pct, .sat-wrap .sat-pct{font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.sat-bar .sat-track, .sat-wrap .sat-track{flex:1;height:20px;background:#0f172a;border-radius:10px;border:1px solid #2d3748;overflow:hidden;position:relative;}
+.sat-bar .sat-fill, .sat-wrap .sat-fill{height:100%;transition:width 0.6s,background 0.6s;}
+.sat-bar .sat-track::after, .sat-wrap .sat-track::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent calc(25% - 1px),rgba(15,23,42,0.7) calc(25% - 1px),rgba(15,23,42,0.7) 25%);pointer-events:none;}
+body[data-sat-level="low"] .sat-bar, body[data-sat-level="low"] .sat-wrap{background:rgba(239,68,68,0.12);}
+body[data-sat-level="low"] .sat-bar .sat-track, body[data-sat-level="low"] .sat-wrap .sat-track{background:#2d1b1f;border-color:#ef4444;}
+body[data-sat-level="low"] .sat-bar .sat-fill, body[data-sat-level="low"] .sat-wrap .sat-fill{background:#ef4444;}
 .shift-wrap{display:flex;align-items:center;gap:5px;}
 .shift-track{width:60px;height:5px;background:#1e2736;border-radius:3px;overflow:hidden;}
 .shift-fill{height:100%;background:#3b82f6;border-radius:3px;transition:width 1s;}
@@ -72,11 +85,35 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .pause-btn{font-size:10px;padding:3px 10px;border-radius:4px;border:0.5px solid #f97316;background:#2d1f0a;color:#fb923c;cursor:pointer;margin-left:4px;font-weight:600;}
 .pause-btn:hover{background:#3d2a10;}
 .pause-btn.paused{border-color:#22c55e;background:#0f2e1a;color:#4ade80;}
-/* CT故障などの常時イベントバナー */
-.event-banner{display:none;background:linear-gradient(90deg,#991b1b,#dc2626);border-bottom:2px solid #ef4444;color:#fff;font-size:12px;font-weight:700;text-align:center;padding:9px 14px;flex-shrink:0;letter-spacing:0.4px;box-shadow:0 2px 10px rgba(239,68,68,0.4);}
+/* CT故障などの常時イベントバナー（flow外・レイアウトズレ防止） */
+.event-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:201;background:linear-gradient(90deg,#991b1b,#dc2626);border-bottom:2px solid #ef4444;color:#fff;font-size:12px;font-weight:700;text-align:center;padding:9px 14px;letter-spacing:0.4px;box-shadow:0 2px 10px rgba(239,68,68,0.4);}
 .event-banner.show{display:block;}
-.alert-bar{background:#2d0f0f;border-bottom:1px solid #ef4444;padding:3px 14px;font-size:10px;color:#fca5a5;display:none;align-items:center;gap:6px;flex-shrink:0;}
+/* 一時警告バー（flow外・top-bar直下にオーバーレイ） */
+.alert-bar{display:none;position:fixed;top:44px;left:0;right:0;z-index:200;background:#2d0f0f;border-bottom:1px solid #ef4444;padding:3px 14px;font-size:10px;color:#fca5a5;align-items:center;gap:6px;}
 .alert-bar.show{display:flex;}
+
+/* ===== ストーリースクリーン ===== */
+.story-screen{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(4px);}
+.story-screen.show{display:flex;}
+.story-card{width:min(480px,calc(100vw - 32px));background:#111827;border:0.5px solid #2d3748;border-radius:12px;padding:28px 28px 24px;box-shadow:0 24px 60px rgba(0,0,0,0.6);display:flex;flex-direction:column;gap:14px;}
+.story-stage-lbl{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
+.story-title{font-size:20px;font-weight:800;color:#f1f5f9;line-height:1.3;}
+.story-body{font-size:13px;color:#94a3b8;line-height:1.8;white-space:pre-line;border-left:2px solid #1e2736;padding-left:12px;}
+.story-speaker{font-size:10px;color:#475569;text-align:right;font-style:italic;}
+.story-start-btn{margin-top:6px;width:100%;padding:12px;background:#1e3a5f;border:0.5px solid #3b82f6;border-radius:8px;color:#93c5fd;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.5px;transition:background 0.15s;}
+.story-start-btn:hover{background:#1e40af;color:#f1f5f9;}
+
+.story-card[data-stage="stageR"]{border-color:#ef4444;}
+.story-card[data-stage="stageR"] .story-start-btn{background:#7f1d1d;border-color:#ef4444;color:#fca5a5;}
+.story-card[data-stage="stageR"] .story-start-btn:hover{background:#991b1b;}
+
+.story-card[data-stage="stageE"]{border-color:#4ade80;}
+.story-card[data-stage="stageE"] .story-start-btn{background:#0f2e1a;border-color:#4ade80;color:#86efac;}
+.story-card[data-stage="stageE"] .story-start-btn:hover{background:#14532d;}
+
+.story-card[data-stage="stage5"]{border-color:#22d3ee;}
+.story-card[data-stage="stage5"] .story-start-btn{background:#0a2030;border-color:#22d3ee;color:#67e8f9;}
+.story-card[data-stage="stage5"] .story-start-btn:hover{background:#0e4f6b;}
 
 .body-wrap{display:flex;flex:1;overflow:hidden;position:relative;}
 
@@ -133,9 +170,14 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 /* ===== 右パネル ===== */
 .right-panel{background:#111827;border-left:1px solid #2d3748;display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0;}
 .right-panel.collapsed .rp-hdr-lbl,.right-panel.collapsed .rp-body{display:none;}
-.rp-hdr{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;padding:6px 10px 4px;border-bottom:0.5px solid #1e2736;display:flex;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;}
+.rp-top{display:flex;align-items:center;flex-shrink:0;border-bottom:0.5px solid #1e2736;}
+.rp-hdr{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;padding:6px 10px 4px;border-bottom:0.5px solid #1e2736;display:flex;align-items:center;gap:6px;flex:1;min-width:0;cursor:pointer;}
+.rp-top .rp-hdr{border-bottom:none;}
 .rp-hdr:hover{background:#151c2b;}
 .rp-hdr-lbl{flex:1;}
+.key-order-btn{width:24px;height:22px;border-radius:5px;border:0.5px solid #2d3748;background:#1e2736;color:#cbd5e1;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rp-top .key-order-btn{margin-right:8px;}
+.key-order-btn:hover{border-color:#60a5fa;background:#1a2845;color:#f1f5f9;}
 .rp-toggle{color:#475569;font-size:13px;transition:transform 0.2s;}
 .right-panel.collapsed .rp-toggle{transform:rotate(180deg);}
 .col-tab{display:none;font-size:9px;color:#334155;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:0.5px;padding:8px 0;cursor:pointer;text-align:center;}
@@ -217,6 +259,7 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .disp-btn.rec.admit{border-color:#60a5fa;background:#1e3a5f;}
 .disp-btn.rec.discharge{border-color:#22c55e;background:#0f2e1a;}
 .rec-badge{font-size:8px;padding:1px 6px;border-radius:10px;margin-left:auto;font-weight:600;}
+.disp-hint{font-size:0.72rem;color:#94a3b8;text-align:center;margin-top:4px;}
 .disp-done{margin:4px 10px;padding:4px 7px;background:#0f2e1a;border:0.5px solid #22c55e;border-radius:5px;font-size:9px;color:#86efac;display:flex;align-items:center;gap:4px;}
 /* 転帰フィードバック（右パネル） */
 .feedback-card{margin:4px 10px;padding:7px 10px;border-radius:5px;font-size:10px;display:flex;flex-direction:column;gap:5px;line-height:1.35;}
@@ -231,6 +274,14 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .feedback-warn .feedback-card-head{color:#fed7aa;}
 .feedback-warn .feedback-card-reason{color:#ffedd5;}
 .feedback-warn .feedback-card-pts{color:#fdba74;}
+.fb-steps{margin-top:6px;border-top:0.5px solid rgba(255,255,255,0.08);padding-top:6px;}
+.fb-steps-title{font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+.fb-step{display:flex;align-items:flex-start;gap:6px;margin-bottom:3px;}
+.fb-step-num{font-size:8px;font-weight:700;color:#60a5fa;width:12px;flex-shrink:0;margin-top:1px;}
+.fb-step-body{display:flex;flex-direction:column;gap:1px;}
+.fb-step-order{font-size:9px;font-weight:700;color:#f1f5f9;}
+.fb-step-reason{font-size:8px;color:#94a3b8;line-height:1.4;}
+.fb-rec-reason{margin-top:4px;font-size:8px;color:#60a5fa;font-style:italic;}
 .no-sel{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:8px;color:#334155;font-size:11px;padding:20px;text-align:center;}
 .no-sel i{font-size:24px;}
 
@@ -280,6 +331,21 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .btn-accept:hover{transform:scale(1.02);}
 .btn-decline{flex:1;padding:10px;border-radius:8px;border:1px solid #2d3748;background:#1e2736;color:#94a3b8;font-size:12px;cursor:pointer;}
 .btn-decline:hover{border-color:#ef4444;color:#fca5a5;}
+
+/* キーオーダー一覧 */
+.key-order-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.68);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(3px);}
+.key-order-modal-bg.show{display:flex;}
+.key-order-modal{width:min(420px,calc(100vw - 32px));background:#111827;border:0.5px solid #2d3748;border-radius:8px;overflow:hidden;box-shadow:0 16px 44px rgba(0,0,0,0.45);}
+.key-order-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:0.5px solid #1e2736;font-size:12px;font-weight:700;color:#f1f5f9;}
+.key-order-close{width:24px;height:24px;border-radius:5px;border:0.5px solid #2d3748;background:#1e2736;color:#64748b;cursor:pointer;font-size:12px;line-height:1;}
+.key-order-close:hover{border-color:#60a5fa;color:#f1f5f9;}
+.key-order-body{padding:10px 12px 12px;}
+.key-order-table{display:flex;flex-direction:column;border:0.5px solid #2d3748;border-radius:6px;overflow:hidden;background:#0f172a;}
+.key-order-row{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:12px;align-items:center;padding:7px 9px;border-bottom:0.5px solid #1e2736;font-size:11px;}
+.key-order-row:last-child{border-bottom:none;}
+.key-order-head{background:#1e2736;color:#94a3b8;font-size:9px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;}
+.key-order-disease{color:#e2e8f0;overflow-wrap:anywhere;}
+.key-order-required{color:#86efac;font-weight:700;text-align:right;white-space:nowrap;}
 
 /* disposition確認 */
 .disp-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:1000;}
@@ -362,25 +428,107 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Noto Sans J
 .mobile-tabs{display:none;flex-shrink:0;background:#111827;border-bottom:1px solid #2d3748;}
 
 /* ===== スマホ対応（768px以下） ===== */
-@media (max-width:768px){
-  .mobile-tabs{display:flex;}
-  .mobile-tab{flex:1;min-height:44px;padding:10px 8px;border:none;border-bottom:3px solid transparent;background:#111827;color:#64748b;font-size:12px;font-weight:600;cursor:pointer;}
-  .mobile-tab.active{color:#f1f5f9;border-bottom-color:#60a5fa;background:#1a2845;}
-  .top-bar{flex-wrap:wrap;height:auto;min-height:44px;padding:8px 10px;gap:6px;}
-  .timer-disp{margin-left:0;}
-  .body-wrap{flex-direction:column;}
-  .er-area{order:-1;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;flex-shrink:0;padding:8px 10px;}
-  .beds-row,.beds-row-exam{flex-wrap:nowrap;min-width:min-content;}
-  .left-panel,.right-panel{width:100%;flex:1;min-height:0;border-right:none;border-left:none;}
-  .body-wrap[data-mobile-panel="left"] .right-panel{display:none!important;}
-  .body-wrap[data-mobile-panel="right"] .left-panel{display:none!important;}
-  .right-panel.collapsed .rp-body{display:flex;}
-  .right-panel.collapsed .rp-hdr-lbl,.right-panel.collapsed .col-tab{display:flex;}
-  .right-panel.collapsed .col-tab{display:none;}
-  .col-tab{display:none!important;}
-  .obtn,.disp-btn,.pause-btn,.back-btn,.mobile-tab,.wait-card,.bed-wrap,.btn-accept,.btn-decline,.tut-next,.spop-btn{min-height:44px;}
-  .wait-card{padding:10px 8px;}
-  .disp-btn{padding:10px 12px;}
-  .obtn{padding:10px 6px;}
-  .log-panel{height:90px;}
+@media (max-width:768px) {
+  /* タブ非表示（3ゾーン常時表示に切り替えるため） */
+  .mobile-tabs { display: none !important; }
+
+  /* トップバー */
+  .top-bar { flex-wrap:wrap; height:auto; min-height:44px; padding:6px 10px; gap:4px; }
+  .sat-bar  { padding:4px 10px; height:22px; gap:6px; }
+  .alert-bar { top:44px; }
+  .timer-disp { margin-left:0; }
+
+  /* body-wrap：縦並び・画面いっぱい */
+  .body-wrap { flex-direction:column; height:calc(100dvh - 88px); overflow:hidden; }
+
+  /* ===== ゾーン2：ベッド（上に配置） ===== */
+  .er-area {
+    order:0 !important; width:100%; flex:0 0 auto;
+    padding:6px 8px; border-bottom:0.5px solid #1e2736;
+    overflow-x:auto; overflow-y:hidden;
+  }
+  .zone-lbl { font-size:8px; margin-bottom:3px; }
+  .z-div    { margin:3px 0; }
+  .beds-row, .beds-row-exam { flex-wrap:wrap; gap:6px; min-width:unset; }
+  .bed-wrap { min-height:unset; }
+  .bed-wrap svg { width:52px !important; height:auto !important; }
+
+  /* ===== 待機患者：ベッドの下に配置 ===== */
+  .left-panel {
+    width:100%; flex:0 0 auto; order:1 !important;
+    border-right:none; border-bottom:0.5px solid #1e2736;
+    overflow:hidden; padding-top:6px;
+  }
+  .panel-hdr { padding:3px 10px; font-size:9px; }
+  .wait-area  { padding:0; }
+  .wait-list  {
+    display:flex; flex-direction:row;
+    overflow-x:auto; gap:6px; padding:6px 10px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .wait-card  {
+    flex:0 0 108px; min-width:108px;
+    padding:6px 8px; min-height:unset;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .pt-name  { font-size:10px; }
+  .pt-chief { font-size:9px; }
+  .pt-vitals { font-size:8px; }
+  .staff-panel { display:none !important; }
+  .drag-hint   { display:none !important; }
+
+  /* ===== 患者詳細（下） ===== */
+  .right-panel { order:2 !important; width:100%; border-right:none; border-left:none; flex:1; min-height:0; overflow-y:auto; }
+  .body-wrap[data-mobile-panel="left"] .right-panel { display:flex !important; }
+  .body-wrap[data-mobile-panel="right"] .left-panel { display:flex !important; }
+  .right-panel.collapsed .rp-body { display:flex; }
+  .col-tab { display:none !important; }
+
+  /* 詳細パネル内コンパクト化（スクロールなし） */
+  .sa-sec        { display:none; }                          /* スタッフ配置：モバイル非表示 */
+  .ord-sec-title { display:none; }                          /* オーダーセクションタイトル非表示 */
+  .sig-bar-title { display:none; }                          /* 検査結果タイトル非表示 */
+
+  .det-sec   { padding:4px 10px 3px; }
+  .det-name  { font-size:12px; }
+  .det-age   { font-size:9px; margin-top:0; }
+  .chief-badge { font-size:9px; padding:2px 6px; margin-top:2px; }
+
+  .vgrid { grid-template-columns:repeat(3,1fr); gap:2px; margin-top:3px; }
+  .vbox  { padding:2px 3px; }
+  .vlbl  { font-size:7px; }
+  .vval  { font-size:10px; }
+
+  .ord-sec  { padding:4px 10px 5px; }
+  .ord-grid { grid-template-columns:repeat(3,1fr); gap:3px; }
+  .obtn     { padding:4px 3px; font-size:9px; min-height:28px; }
+
+  .sig-bar  { padding:3px 10px 4px; }
+  .sig-list { display:grid; grid-template-columns:1fr 1fr; gap:3px; }
+  .sig-row  { padding:3px 6px; }
+
+  .disp-sec   { padding:4px 10px 5px; }
+  .disp-sec-title { display:none; }
+  .disp-opts  { flex-direction:row; gap:4px; }
+  .disp-btn   { padding:5px 4px; font-size:9px; min-height:28px; flex:1; }
+  .rp-body    { padding-bottom:4px; }
+
+  /* ログパネルは非表示（スペース確保） */
+  .log-panel { display:none; }
+
+  /* タッチターゲット最低44px（重要な操作は確保） */
+  .pause-btn, .back-btn, .btn-accept, .btn-decline, .tut-next, .spop-btn { min-height:44px; }
+
+  /* ブリーフィング画面 */
+  .story-card  { padding:20px 16px 18px; gap:10px; }
+  .story-title { font-size:16px; }
+  .story-body  { font-size:12px; }
+
+  /* キーオーダーモーダル */
+  .key-order-modal { width:calc(100vw - 24px); }
+  .key-order-row   { font-size:10px; padding:6px 8px; }
+
+  .stage-select-card { padding:16px; gap:8px; }
+  .stage-item-title { font-size:10px; }
+  .stage-item-subtitle { font-size:9px; }
 }

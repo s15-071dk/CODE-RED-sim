@@ -1,12 +1,103 @@
 export const DISEASE_SIG = {
-  acs:   { blood: { color: "red",    text: "🔴 Troponin↑↑ 異常" }, ecg: { color: "red",    text: "🔴 ST上昇 — MI疑い" },       echo: { color: "red",    text: "🔴 EF低下・壁運動異常" }, xray: { color: "green",  text: "🟢 肺野清明" },     ct: { color: "yellow", text: "🟡 解離は除外" },           rec: "icu" },
-  stroke:{ blood: { color: "yellow", text: "🟡 凝固系 要確認" },   ecg: { color: "yellow", text: "🟡 AF疑い" },              echo: { color: "yellow", text: "🟡 心原性塞栓 要評価" },  xray: { color: "green",  text: "🟢 異常なし" },     ct: { color: "red",    text: "🔴 頭蓋内出血あり" },       rec: "icu" },
-  fever: { blood: { color: "yellow", text: "🟡 WBC軽度上昇" },     ecg: { color: "green",  text: "🟢 正常洞調律" },           echo: { color: "green",  text: "🟢 心機能正常" },          xray: { color: "green",  text: "🟢 両肺野清明" },    ct: { color: "green",  text: "🟢 異常なし" },             rec: "discharge" },
-  abdo:  { blood: { color: "red",    text: "🔴 炎症反応高値" },     ecg: { color: "green",  text: "🟢 正常" },                echo: { color: "red",    text: "🔴 腹水・炎症所見" },       xray: { color: "yellow", text: "🟡 イレウス疑い" }, ct: { color: "red",    text: "🔴 腹膜炎所見" },           rec: "admit" },
-  bp:    { blood: { color: "yellow", text: "🟡 電解質 軽度異常" },  ecg: { color: "yellow", text: "🟡 左室肥大パターン" },      echo: { color: "yellow", text: "🟡 軽度壁肥厚" },            xray: { color: "green",  text: "🟢 異常なし" },     ct: { color: "green",  text: "🟢 頭蓋内異常なし" },       rec: "admit" },
-  sepsis:{ blood: { color: "red",    text: "🔴 乳酸高値・WBC高値" }, ecg: { color: "green",  text: "🟢 洞調律" },              echo: { color: "yellow", text: "🟡 心機能低下" },            xray: { color: "yellow", text: "🟡 浸潤影疑い" },   ct: { color: "red",    text: "🔴 感染巣あり" },           rec: "icu" },
-  trauma:{ blood: { color: "red",    text: "🔴 出血・貧血疑い" },   ecg: { color: "green",  text: "🟢 致死的不整脈なし" },     echo: { color: "yellow", text: "🟡 心嚢液疑い" },            xray: { color: "red",    text: "🔴 骨折・気胸疑い" }, ct: { color: "red",  text: "🔴 臓器損傷疑い" },         rec: "icu" },
-  minor: { blood: { color: "green",  text: "🟢 異常なし" },         ecg: { color: "green",  text: "🟢 正常洞調律" },           echo: { color: "green",  text: "🟢 異常なし" },            xray: { color: "green",  text: "🟢 異常なし" },     ct: { color: "green",  text: "🟢 異常なし" },             rec: "discharge" },
+  acs: {
+    blood: { color: "red",    text: "🔴 Troponin↑↑ 異常" },
+    ecg:   { color: "red",    text: "🔴 ST上昇 — MI疑い" },
+    echo:  { color: "red",    text: "🔴 EF低下・壁運動異常" },
+    xray:  { color: "green",  text: "🟢 肺野清明" },
+    ct:    { color: "yellow", text: "🟡 解離は除外" },
+    rec: "icu",
+    keyOrder: ["iv", "ecg", "blood"],
+  },
+  stroke: {
+    blood: { color: "yellow", text: "🟡 凝固系 要確認" },
+    ecg:   { color: "yellow", text: "🟡 AF疑い" },
+    echo:  { color: "yellow", text: "🟡 心原性塞栓 要評価" },
+    xray:  { color: "green",  text: "🟢 異常なし" },
+    ct:    { color: "red",    text: "🔴 頭蓋内出血あり" },
+    rec: "icu",
+    keyOrder: ["ct", "blood"],
+  },
+  fever: {
+    blood: { color: "yellow", text: "🟡 WBC軽度上昇" },
+    ecg:   { color: "green",  text: "🟢 正常洞調律" },
+    echo:  { color: "green",  text: "🟢 心機能正常" },
+    xray:  { color: "green",  text: "🟢 両肺野清明" },
+    ct:    { color: "green",  text: "🟢 異常なし" },
+    rec: "discharge",
+    keyOrder: ["blood"],
+  },
+  abdo: {
+    blood: { color: "red",    text: "🔴 炎症反応高値" },
+    ecg:   { color: "green",  text: "🟢 正常" },
+    echo:  { color: "red",    text: "🔴 腹水・炎症所見" },
+    xray:  { color: "yellow", text: "🟡 イレウス疑い" },
+    ct:    { color: "red",    text: "🔴 腹膜炎所見" },
+    rec: "admit",
+    keyOrder: ["blood", "ct"],
+  },
+  bp: {
+    blood: { color: "yellow", text: "🟡 電解質 軽度異常" },
+    ecg:   { color: "yellow", text: "🟡 左室肥大パターン" },
+    echo:  { color: "yellow", text: "🟡 軽度壁肥厚" },
+    xray:  { color: "green",  text: "🟢 異常なし" },
+    ct:    { color: "green",  text: "🟢 頭蓋内異常なし" },
+    rec: "admit",
+    keyOrder: ["blood", "ecg"],
+  },
+  sepsis: {
+    blood: { color: "red",    text: "🔴 乳酸高値・WBC高値" },
+    ecg:   { color: "green",  text: "🟢 洞調律" },
+    echo:  { color: "yellow", text: "🟡 心機能低下" },
+    xray:  { color: "yellow", text: "🟡 浸潤影疑い" },
+    ct:    { color: "red",    text: "🔴 感染巣あり" },
+    rec: "icu",
+    keyOrder: ["iv", "blood", "ct"],
+  },
+  trauma: {
+    blood: { color: "red",    text: "🔴 出血・貧血疑い" },
+    ecg:   { color: "green",  text: "🟢 致死的不整脈なし" },
+    echo:  { color: "yellow", text: "🟡 心嚢液疑い" },
+    xray:  { color: "red",    text: "🔴 骨折・気胸疑い" },
+    ct:    { color: "red",    text: "🔴 臓器損傷疑い" },
+    rec: "icu",
+    keyOrder: ["iv", "ct", "xray", "blood"],
+  },
+  hypo: {
+    blood: { color: "red",    text: "🔴 血糖低値" },
+    ecg:   { color: "green",  text: "🟢 正常洞調律" },
+    echo:  { color: "green",  text: "🟢 異常なし" },
+    xray:  { color: "green",  text: "🟢 異常なし" },
+    ct:    { color: "green",  text: "🟢 異常なし" },
+    rec: "admit",
+    keyOrder: ["blood"],
+  },
+  minor: {
+    blood: { color: "green",  text: "🟢 異常なし" },
+    ecg:   { color: "green",  text: "🟢 正常洞調律" },
+    echo:  { color: "green",  text: "🟢 異常なし" },
+    xray:  { color: "green",  text: "🟢 異常なし" },
+    ct:    { color: "green",  text: "🟢 異常なし" },
+    rec: "discharge",
+    keyOrder: null,
+  },
+  anaphylaxis: {
+    blood: { color: "yellow", text: "🟡 白血球上昇・IgE高値" },
+    ecg:   { color: "yellow", text: "🟡 頻脈・軽度ST変化" },
+    echo:  { color: "green",  text: "🟢 心機能は保たれている" },
+    xray:  { color: "green",  text: "🟢 肺野清明" },
+    ct:    { color: "green",  text: "🟢 異常なし" },
+    rec: "icu",
+    keyOrder: ["iv", "blood", "ecg"],
+  },
+  gi_bleed: {
+    blood: { color: "red",    text: "🔴 Hb低下・凝固異常" },
+    ecg:   { color: "green",  text: "🟢 正常洞調律" },
+    echo:  { color: "yellow", text: "🟡 貧血性変化" },
+    xray:  { color: "yellow", text: "🟡 free air なし" },
+    ct:    { color: "red",    text: "🔴 出血部位・造影剤漏出" },
+    rec: "icu",
+    keyOrder: ["iv", "blood", "ct"],
+  },
 };
 
 export const PATIENT_SPEECH = {
@@ -64,10 +155,125 @@ export const PATIENT_SPEECH = {
     iv_done:  ["ありがとうございます"],
     disposed: { icu: "よろしくお願いします", admit: "ありがとうございます", discharge: "ありがとうございました！助かりました" },
   },
+  anaphylaxis: {
+    assign:   ["のどが…つまって…息が…", "からだが…かゆくて熱くて…", "呼吸が…おかしくて…", "怖いです、助けてください…"],
+    critical: ["先生…もう…息が…", "たすけてください…からだが…"],
+    iv_done:  ["少し…楽になってきました…", "ありがとうございます…"],
+    disposed: { icu: "ICUで頑張ります…アレルギー、気をつけます", admit: "よろしくお願いします", discharge: "ありがとうございました" },
+  },
+  gi_bleed: {
+    assign:   ["気持ち悪くて…血が出て…", "胃が…ずっと…痛くて…", "また吐きそうで…", "真っ黒いのが…出て…"],
+    critical: ["先生…頭が…くらくら…", "どうか…助けてください…"],
+    iv_done:  ["ありがとうございます…", "すこし…落ち着いた気が…"],
+    disposed: { icu: "手術…ですか…よろしくお願いします", admit: "先生に任せます", discharge: "ありがとうございました" },
+  },
 };
 
 export const SIG_COLORS = {
   red:    { border: "#ef4444", text: "#fca5a5", dot: "#ef4444", rowClass: "red-row" },
   yellow: { border: "#eab308", text: "#fde68a", dot: "#eab308", rowClass: "yellow-row" },
   green:  { border: "#22c55e", text: "#86efac", dot: "#22c55e", rowClass: "green-row" },
+};
+
+export const CHIEF_FEEDBACK = {
+  acs: {
+    label: "胸痛（ACS疑い）",
+    steps: [
+      { order: "iv",    reason: "静脈路確保：薬剤投与・緊急処置に備えるため" },
+      { order: "ecg",   reason: "心電図：ST変化を確認しACS診断の根拠にする" },
+      { order: "blood", reason: "血液検査：トロポニン・CKなど心筋逸脱酵素を確認" },
+    ],
+    rec: "icu",
+    recReason: "ACSは緊急介入が必要なためICU転送が基本",
+  },
+  stroke: {
+    label: "突然の麻痺・言語障害（脳卒中疑い）",
+    steps: [
+      { order: "ct",    reason: "頭部CT：出血か梗塞かを鑑別する最初のステップ" },
+      { order: "blood", reason: "血液検査：凝固系・血糖を確認（tPA適応判断に必要）" },
+    ],
+    rec: "icu",
+    recReason: "脳卒中は時間が命。専門科への緊急転送が必要",
+  },
+  sepsis: {
+    label: "発熱・ショック（敗血症疑い）",
+    steps: [
+      { order: "iv",    reason: "輸液：敗血症性ショックへの対応で最優先" },
+      { order: "blood", reason: "血液検査：血培・乳酸値・炎症反応を確認" },
+      { order: "ct",    reason: "CT：感染源（肺炎・腹腔内感染等）を検索" },
+    ],
+    rec: "icu",
+    recReason: "敗血症は臓器障害が進行するためICU管理が必要",
+  },
+  trauma: {
+    label: "外傷",
+    steps: [
+      { order: "iv",    reason: "輸液路確保：出血性ショックに備えて最初に確保" },
+      { order: "ct",    reason: "全身CT：出血部位・骨折・臓器損傷を評価" },
+      { order: "xray",  reason: "X線：骨折・気胸・縦隔拡大をスクリーニング" },
+      { order: "blood", reason: "血液検査：貧血・凝固異常・臓器障害を評価" },
+    ],
+    rec: "icu",
+    recReason: "重症外傷は出血コントロールのためICU・手術室が必要",
+  },
+  anaphylaxis: {
+    label: "アナフィラキシー",
+    steps: [
+      { order: "iv",    reason: "輸液路確保：アドレナリン・補液の投与ルート確保" },
+      { order: "blood", reason: "血液検査：重症度評価・鑑別のため" },
+      { order: "ecg",   reason: "心電図：循環動態への影響を監視" },
+    ],
+    rec: "icu",
+    recReason: "アナフィラキシーは再燃リスクがあり経過観察が必要",
+  },
+  gi_bleed: {
+    label: "消化管出血",
+    steps: [
+      { order: "iv",    reason: "輸液路確保：出血性ショックへの緊急対応のため" },
+      { order: "blood", reason: "血液検査：Hb・凝固系を確認し輸血適応を判断" },
+      { order: "ct",    reason: "CT：出血部位・出血量の評価" },
+    ],
+    rec: "icu",
+    recReason: "活動性出血は内視鏡・IVR等の緊急処置が必要",
+  },
+  abdo: {
+    label: "腹痛",
+    steps: [
+      { order: "blood", reason: "血液検査：炎症・膵酵素・肝機能で原因を絞り込む" },
+      { order: "ct",    reason: "CT：腹腔内病変（虫垂炎・胆嚢炎等）を評価" },
+    ],
+    rec: "admit",
+    recReason: "原因疾患の治療のため入院管理が必要",
+  },
+  bp: {
+    label: "高血圧緊急症",
+    steps: [
+      { order: "blood", reason: "血液検査：臓器障害（腎・心）の評価" },
+      { order: "ecg",   reason: "心電図：高血圧による心臓への影響を確認" },
+    ],
+    rec: "admit",
+    recReason: "降圧管理と臓器障害の治療のため入院が必要",
+  },
+  hypo: {
+    label: "低血糖",
+    steps: [
+      { order: "blood", reason: "血液検査：血糖値確認・電解質異常の評価" },
+    ],
+    rec: "admit",
+    recReason: "原因検索と再発予防のため経過観察が必要",
+  },
+  fever: {
+    label: "発熱",
+    steps: [
+      { order: "blood", reason: "血液検査：感染源・炎症の程度を評価" },
+    ],
+    rec: "discharge",
+    recReason: "軽症感染症は外来治療で対応可能",
+  },
+  minor: {
+    label: "軽症",
+    steps: [],
+    rec: "discharge",
+    recReason: "処置不要の軽症。帰宅で問題なし",
+  },
 };

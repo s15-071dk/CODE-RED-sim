@@ -26,13 +26,15 @@ export const state = {
   staffEnabled: false,
   callEnabled: false,
   satEnabled: false,
-  progress: { tutDone: false, s1Done: false, s1Grade: '--', s2Done: false, s2Grade: '--', s3Done: false, s3Grade: '--', s4Done: false, s4Grade: '--' },
+  progress: { tutDone: false, s1Done: false, s1Grade: '--', s2Done: false, s2Grade: '--', s3Done: false, s3Grade: '--', s4Done: false, s4Grade: '--', s5Done: false, s5Grade: '--', sRDone: false, sRGrade: '--' },
   orderCountForTut: 0,
   eventLog: [],
   lastFeedback: null,
   shiftDuration: 240,
   activeEvent: null,
   stage4EventFired: false,
+  stage5EventCount: 0,
+  endlessCount: 0,
 };
 
 export const LOG_MAX = 60;

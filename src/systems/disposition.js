@@ -37,7 +37,14 @@ export function applyDisp(type, bedId) {
 
   state.score += pts;
   state.dispCountVal++;
-  changeSat(effectivelyCorrect ? 5 : -10);
+  if (effectivelyCorrect) {
+    let satBonus = 8;
+    if (type === "icu" && p.color === "red") satBonus = 15;
+    if (p.noOrderNeeded && type === "discharge" && doneOrderCnt === 0) satBonus = 12;
+    changeSat(satBonus);
+  } else {
+    changeSat(-10);
+  }
   document.getElementById("score-disp").textContent = state.score.toLocaleString();
   document.getElementById("disp-count").textContent = state.dispCountVal;
 
@@ -100,6 +107,7 @@ export function applyDisp(type, bedId) {
         if (!state.gameRunning && !state.gameClear) return;
         if (effectivelyCorrect) {
           logMsg('system', msg);
+          changeSat(5);
         } else {
           logMsg('alert', msg);
           changeSat(-10);

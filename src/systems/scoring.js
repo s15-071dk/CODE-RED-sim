@@ -23,8 +23,11 @@ export function changeSat(delta) {
   document.getElementById("sat-pct").style.color       = col;
   const ei = document.getElementById("sat-emoji");
   if (ei) ei.textContent = (pct > 60 ? "😊" : pct > 30 ? "😰" : "💀") + " 患者満足度";
+  document.body.dataset.satLevel = pct <= 30 ? "low" : pct <= 60 ? "mid" : "high";
   if (state.satisfaction <= 0 && !state.gameOver) triggerGameOver();
 }
+
+const ENDLESS_HS_KEY = 'codeRedEndlessHS';
 
 export function triggerGameOver() {
   if (state.gameOver || state.gameClear) return;
@@ -38,7 +41,22 @@ export function triggerGameOver() {
   document.getElementById("go-time").textContent  = m + ":" + (s < 10 ? "0" + s : s);
   document.getElementById("go-grade").textContent = gr.g;
   document.getElementById("go-grade").className   = "gbadge " + gr.cls;
-  document.getElementById("go-comment").textContent = gr.c;
+
+  // エンドレスモードのハイスコア処理
+  if (state.currentStage === "stageE") {
+    const prev = parseInt(localStorage.getItem(ENDLESS_HS_KEY) || "0");
+    const isNew = state.score > prev;
+    if (isNew) localStorage.setItem(ENDLESS_HS_KEY, String(state.score));
+    const hsLine = isNew
+      ? `🏆 NEW RECORD！ ${state.score.toLocaleString()}pt`
+      : `ベスト：${prev.toLocaleString()}pt`;
+    document.getElementById("go-comment").textContent = hsLine;
+    document.getElementById("go-grade").textContent = isNew ? "🏆" : gr.g;
+    document.getElementById("go-grade").className   = "gbadge " + (isNew ? "gS" : gr.cls);
+  } else {
+    document.getElementById("go-comment").textContent = gr.c;
+  }
+
   document.getElementById("screen-go").classList.add("show");
 }
 
@@ -46,6 +64,7 @@ export function triggerClear(msg = "クリア！", sub = "") {
   if (state.gameOver || state.gameClear) return;
   state.gameClear   = true;
   state.gameRunning = false;
+  if (state.currentStage) window.markStageCleared?.(state.currentStage);
   if (state.mainLoop) { clearInterval(state.mainLoop); state.mainLoop = null; }
   const gr  = calcGrade();
   const sat = Math.round(state.satisfaction);

@@ -1,11 +1,88 @@
 import { state } from '../state.js';
 import { COLORS, TRIAGE_BG, TRIAGE_BDR, TRIAGE_LV, ORDERS } from '../systems/triage.js';
-import { DISEASE_SIG, SIG_COLORS } from '../data/diseases.js';
+import { DISEASE_SIG, SIG_COLORS, CHIEF_FEEDBACK } from '../data/diseases.js';
 import { fatigueState } from '../data/staff.js';
 import { makeVitalHtml, waitVitals } from '../systems/vitals.js';
 import { getUrgencyColor } from '../systems/scoring.js';
 import { ensureTutorialSpotlightObserver, syncTutorialSpotlightRing } from './tutorialSpotlight.js';
 import { syncCtEventBanner } from './notifications.js';
+
+const DISEASE_LABELS = {
+  acs: "ACS（急性冠症候群）",
+  stroke: "脳卒中",
+  fever: "発熱",
+  abdo: "腹痛",
+  bp: "高血圧",
+  sepsis: "敗血症",
+  trauma: "外傷",
+  hypo: "低血糖",
+  minor: "軽症",
+  anaphylaxis: "アナフィラキシー",
+  gi_bleed: "消化管出血",
+};
+
+const KEY_ORDER_DISEASES = [
+  "acs",
+  "stroke",
+  "fever",
+  "abdo",
+  "bp",
+  "sepsis",
+  "trauma",
+  "hypo",
+  "anaphylaxis",
+  "gi_bleed",
+  "minor",
+];
+
+function getOrderLabel(orderId) {
+  return ORDERS.find(o => o.id === orderId)?.label || orderId || "何でも1件";
+}
+
+function getKeyOrderLabel(keyOrder) {
+  if (Array.isArray(keyOrder) && keyOrder.length) {
+    return keyOrder.map(k => getOrderLabel(k)).join(" + ");
+  }
+  return keyOrder ? getOrderLabel(keyOrder) : "何でも1件";
+}
+
+export function openKeyOrderModal() {
+  const bg = document.getElementById("key-order-modal-bg");
+  const table = document.getElementById("key-order-table");
+  if (!bg || !table) return;
+
+  const rows = KEY_ORDER_DISEASES
+    .filter(id => DISEASE_SIG[id])
+    .map(id => {
+      const sig = DISEASE_SIG[id];
+      const required = getKeyOrderLabel(sig.keyOrder);
+      return `<div class="key-order-row"><span class="key-order-disease">${DISEASE_LABELS[id] || id}</span><span class="key-order-required">${required}</span></div>`;
+    })
+    .join("");
+
+  table.innerHTML = `<div class="key-order-row key-order-head"><span>疾患</span><span>必要な検査</span></div>${rows}`;
+  bg.classList.add("show");
+}
+
+export function closeKeyOrderModal() {
+  document.getElementById("key-order-modal-bg")?.classList.remove("show");
+}
+
+function bindKeyOrderButton() {
+  const btn = document.getElementById("key-order-btn");
+  if (!btn || btn.dataset.bound === "true") return;
+  btn.dataset.bound = "true";
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    openKeyOrderModal();
+  });
+}
+
+if (typeof window !== "undefined") {
+  Object.assign(window, { openKeyOrderModal, closeKeyOrderModal });
+  bindKeyOrderButton();
+  document.addEventListener("DOMContentLoaded", bindKeyOrderButton);
+}
 
 export function makeBedSVG(bed, w, h, isSel) {
   const p = bed.patient, ck = p ? p.color : "empty", c = COLORS[ck], occ = !!p;
@@ -132,33 +209,11 @@ export function renderWaitList() {
     const card  = document.createElement("div");
     const isSel = state.selectedPatient && state.selectedPatient.id === p.id;
     card.className  = `wait-card ${TRIAGE_LV[p.color] || "lv3"}${isSel ? " sel" : ""}`;
-    card.draggable  = true;
     card.innerHTML  = `<div style="display:flex;align-items:center;"><span style="width:6px;height:6px;border-radius:50%;background:${TRIAGE_BDR[p.color]};display:inline-block;margin-right:3px;flex-shrink:0;"></span><span class="pt-name">${p.name}/${p.age}歳</span></div>
       <div class="pt-chief">${p.chief}</div>
-      <div class="pt-vitals">${waitVitals(p)}</div>
-      <button class="assign-btn${isSel ? " selected" : ""}" onclick="selectPatientForAssign('${p.id}')">${isSel ? "✕ キャンセル" : "▶ ベッドへ割り当てる"}</button>`;
+      <div class="pt-vitals">${waitVitals(p)}</div>`;
 
-    card.addEventListener("dragstart", e => {
-      state.dragPatient = p;
-      card.classList.add("dragging");
-      const g = document.getElementById("ghost");
-      g.style.background  = TRIAGE_BG[p.color]  || "#0f2e1a";
-      g.style.borderColor = TRIAGE_BDR[p.color] || "#22c55e";
-      g.textContent       = p.name + " — " + p.chief;
-      g.style.display     = "block";
-      e.dataTransfer.effectAllowed = "move";
-    });
-    card.addEventListener("drag", e => {
-      if (e.clientX === 0 && e.clientY === 0) return;
-      const g = document.getElementById("ghost");
-      g.style.left = (e.clientX + 14) + "px";
-      g.style.top  = (e.clientY - 18) + "px";
-    });
-    card.addEventListener("dragend", () => {
-      card.classList.remove("dragging");
-      document.getElementById("ghost").style.display = "none";
-      state.dragPatient = null;
-    });
+    card.onclick = () => window.selectPatientForAssign(p.id);
     list.appendChild(card);
   });
   requestAnimationFrame(() => syncTutorialSpotlightRing());
@@ -196,8 +251,10 @@ export function renderDetail() {
   const pendingIds = new Set(p.orders.filter(o => o.status === "pending").map(o => o.id));
   const doneIds    = new Set(p.orders.filter(o => o.status === "done").map(o => o.id));
   const doneCnt    = doneIds.size;
-  // 発注済み（pending含む）が1件以上あれば転帰を解放。処置結果を待たずに臨床判断できる設計。
-  const canDispose = doneCnt >= 1 || pendingIds.size >= 1 || !!p.noOrderNeeded;
+  const keyOrder      = p.disease ? (DISEASE_SIG[p.disease]?.keyOrder || null) : null;
+  const keyDone       = keyOrder ? keyOrder.every(k => !!p.signals[k]) : doneCnt >= 1;
+  const canDispose    = keyDone || !!p.noOrderNeeded;
+  const missingOrders = keyOrder ? keyOrder.filter(k => !p.signals[k]).map(k => ORDERS.find(o => o.id === k)?.label || k) : [];
 
   const sigs    = Object.values(p.signals || {});
   const redCnt  = sigs.filter(s => s.color === "red").length;
@@ -249,19 +306,36 @@ export function renderDetail() {
   // 転帰直後のフィードバック（state.lastFeedback・bedId一致時のみ）
   const lf           = state.lastFeedback;
   const feedbackHere = lf && lf.bedId === bed.id;
+  const fb = p.disease ? CHIEF_FEEDBACK[p.disease] : null;
+  const fbStepsHtml = fb && fb.steps && fb.steps.length
+    ? `<div class="fb-steps">
+        <div class="fb-steps-title">推奨検査順</div>
+        ${fb.steps.map((s, i) =>
+          `<div class="fb-step">
+            <span class="fb-step-num">${i + 1}</span>
+            <div class="fb-step-body">
+              <span class="fb-step-order">${s.order.toUpperCase()}</span>
+              <span class="fb-step-reason">${s.reason}</span>
+            </div>
+          </div>`
+        ).join('')}
+        <div class="fb-rec-reason">${fb.recReason}</div>
+      </div>`
+    : '';
   const dispHTML     = p.disposed
     ? feedbackHere
       ? `<div class="feedback-card ${lf.correct ? "feedback-correct" : "feedback-warn"}">
           <div class="feedback-card-head">${lf.correct ? "✓ 正解：" : "⚠ 要確認："}${lf.label}</div>
           <div class="feedback-card-reason">${lf.reason}</div>
           <div class="feedback-card-pts">獲得ポイント：+${lf.pts}pt</div>
+          ${fbStepsHtml}
         </div>`
       : `<div class="disp-done"><i class="ti ti-circle-check"></i>転帰決定済み</div>`
-    : `<div class="disp-sec"><div class="disp-sec-title">転帰の決定${canDispose ? '<span style="font-size:9px;color:#22c55e;margin-left:6px;">✓ 解放済み</span>' : '<span style="font-size:9px;color:#334155;margin-left:6px;">検査1件完了後に解放</span>'}</div>
+    : `<div class="disp-sec"><div class="disp-sec-title">転帰の決定${canDispose ? '<span style="font-size:9px;color:#22c55e;margin-left:6px;">✓ 解放済み</span>' : `<span style="font-size:9px;color:#334155;margin-left:6px;">残り${missingOrders.length}件の検査が必要</span>`}</div>
     <div class="disp-opts">${dispOpts.map(opt => {
       const isRec = canDispose && rec === opt.id;
       return `<button class="disp-btn${isRec ? " rec " + opt.id : ""}" ${canDispose && !p.disposed ? `onclick="applyDisp('${opt.id}','${bed.id}')"` : "disabled"}><i class="ti ${opt.icon}" style="font-size:14px;color:${opt.color};"></i><span style="color:#f1f5f9;">${opt.label}</span>${isRec ? `<span class="rec-badge" style="${opt.recBg}">推奨</span>` : ""}</button>`;
-    }).join("")}</div></div>`;
+    }).join("")}</div>${!canDispose && !p.noOrderNeeded && missingOrders.length ? `<p class="disp-hint">未実施：${missingOrders.join("・")}</p>` : ''}</div>`;
 
   body.innerHTML = `
     <div class="det-sec">

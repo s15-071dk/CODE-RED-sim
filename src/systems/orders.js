@@ -5,6 +5,7 @@ import { fatigueState } from '../data/staff.js';
 import { renderDetail } from '../ui/render.js';
 import { logMsg, showToast } from '../ui/notifications.js';
 import { checkTutEvent } from './tutorial.js';
+import { changeSat } from './scoring.js';
 import { pickRandom } from '../utils/random.js';
 
 export function placeOrder(bedId, orderId) {
@@ -49,6 +50,9 @@ export function placeOrder(bedId, orderId) {
     logMsg('event', '✅ ' + bed.patient.name + ' — ' + def.label + ' 完了 ' + sig.text);
 
     if (orderId === 'iv') {
+      if (bed.patient.color === 'red' || bed.patient.color === 'orange') {
+        changeSat(2);
+      }
       const _ps2 = PATIENT_SPEECH[bed.patient.disease] || PATIENT_SPEECH.fever;
       setTimeout(() => {
         if (bed.patient) logMsg('patient', '👤 ' + bed.patient.name + '「' + pickRandom(_ps2.iv_done) + '」');

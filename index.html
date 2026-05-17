@@ -2,6 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CODE RED">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CODE RED ER — 救急外来シミュレーション</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
@@ -33,54 +40,15 @@
       </button>
     </div>
   </div>
-  <div class="stage-list">
-    <div class="stage-card tutorial" onclick="startStage('tutorial')">
-      <div class="stage-num" style="color:#22c55e;">0</div>
-      <div class="stage-info">
-        <div class="stage-name">チュートリアル — 最初の一歩</div>
-        <div class="stage-desc">操作を学ぶ。患者1名・時間制限なし</div>
-        <div class="stage-tags"><span class="stag stag-easy">難易度 ★☆☆</span><span class="stag stag-info">患者 1名</span><span class="stag stag-info">時間制限なし</span></div>
-      </div>
-      <div><div style="font-size:20px;font-weight:800;color:#22c55e;" id="grade-tut">—</div></div>
-    </div>
-    <div class="stage-card s1" id="card-s1" onclick="tryStage('stage1')">
-      <div class="stage-num" style="color:#60a5fa;">1</div>
-      <div class="stage-info">
-        <div class="stage-name">初日のシフト</div>
-        <div class="stage-desc">軽症中心。オーダーとdispositionの練習</div>
-        <div class="stage-tags"><span class="stag stag-easy">難易度 ★☆☆</span><span class="stag stag-info">患者 3名</span><span class="stag stag-info">入電なし</span></div>
-      </div>
-      <div id="right-s1"><div style="font-size:20px;font-weight:800;color:#60a5fa;" id="grade-s1">🔒</div></div>
-    </div>
-    <div class="stage-card s2 locked" id="card-s2" onclick="tryStage('stage2')">
-      <div class="stage-num" style="color:#f97316;">2</div>
-      <div class="stage-info">
-        <div class="stage-name">救急の基本</div>
-        <div class="stage-desc">重症患者が登場。入電あり</div>
-        <div class="stage-tags"><span class="stag stag-med">難易度 ★★☆</span><span class="stag stag-info">患者 3名</span><span class="stag stag-info">入電あり</span></div>
-      </div>
-      <div id="right-s2"><div class="lock-icon">🔒</div></div>
-    </div>
-    <div class="stage-card s3 locked">
-      <div class="stage-num" style="color:#ef4444;">3</div>
-      <div class="stage-info">
-        <div class="stage-name">スタッフ管理</div>
-        <div class="stage-desc">疲労システム有効。休憩判断が鍵</div>
-        <div class="stage-tags"><span class="stag stag-hard">難易度 ★★★</span><span class="stag stag-info">患者 5名</span><span class="stag stag-info">疲労あり</span></div>
-      </div>
-      <div><div class="lock-icon">🔒</div></div>
-    </div>
-    <div class="stage-card s4 locked" id="card-s4" onclick="tryStage('stage4')" style="background:#2a1f35;border-color:#a855f7;">
-      <div class="stage-num" style="color:#a855f7;">4</div>
-      <div class="stage-info">
-        <div class="stage-name">Stage 4</div>
-        <div class="stage-desc">ランダムイベント・3分シフト</div>
-        <div class="stage-tags"><span class="stag stag-hard">難易度 ★★★</span><span class="stag stag-info">ランダム</span><span class="stag stag-info">3分</span></div>
-      </div>
-      <div id="right-s4"><div style="font-size:20px;font-weight:800;color:#a855f7;" id="grade-s4">🔒</div></div>
-    </div>
+
+</div>
+
+<!-- ステージ選択画面（#title-screenの外・オーバーレイ） -->
+<div id="stage-select-screen" style="display:none;" class="full-screen-overlay">
+  <div class="stage-select-card">
+    <div class="stage-select-title">ステージを選択</div>
+    <div id="stage-list" class="stage-list"></div>
   </div>
-  <div class="title-note" id="title-note">チュートリアルをクリアするとステージ1が解放されます</div>
 </div>
 
 <!-- ゲーム画面 -->
@@ -94,13 +62,6 @@
     <div class="top-stat"><span class="lbl">診察室</span><span class="val" id="stat-e">0/5</span></div>
     <div class="top-stat"><span class="lbl">得点</span><span class="val grn" id="score-disp">0</span></div>
     <div class="top-stat"><span class="lbl">転帰</span><span class="val grn" id="disp-count">0</span></div>
-    <div class="sat-wrap">
-      <div class="sat-lbl-row">
-        <span class="sat-lbl" id="sat-emoji">😊 患者満足度</span>
-        <span class="sat-pct" id="sat-pct" style="color:#22c55e;">100%</span>
-      </div>
-      <div class="sat-track"><div class="sat-fill" id="sat-fill" style="width:100%;background:#22c55e;"></div></div>
-    </div>
     <div class="shift-wrap" id="shift-wrap" style="display:none;">
       <span style="font-size:9px;color:#64748b;">⏱</span>
       <div class="shift-track"><div class="shift-fill" id="shift-fill" style="width:100%;"></div></div>
@@ -110,6 +71,11 @@
     <span class="timer-disp" id="clock">08:00</span>
     <button class="pause-btn" id="pause-btn" onclick="togglePause()">⏸ 一時停止</button>
     <button class="back-btn" onclick="backToTitle()">← タイトル</button>
+  </div>
+  <div class="sat-bar">
+    <span class="sat-lbl" id="sat-emoji">😊 患者満足度</span>
+    <div class="sat-track"><div class="sat-fill" id="sat-fill" style="width:100%;background:#22c55e;"></div></div>
+    <span class="sat-pct" id="sat-pct" style="color:#22c55e;">100%</span>
   </div>
 
   <div class="mobile-tabs" id="mobile-tabs" aria-label="パネル切り替え">
@@ -152,9 +118,12 @@
     </div>
 
     <div class="right-panel" id="right-panel">
-      <div class="rp-hdr" onclick="togglePanel()">
-        <span class="rp-hdr-lbl" id="rp-title">患者詳細</span>
-        <i class="rp-toggle ti ti-chevron-right"></i>
+      <div class="rp-top">
+        <div class="rp-hdr" onclick="togglePanel()">
+          <span class="rp-hdr-lbl" id="rp-title">患者詳細</span>
+          <i class="rp-toggle ti ti-chevron-right"></i>
+        </div>
+        <button type="button" class="key-order-btn" id="key-order-btn" title="転帰解放に必要な検査">📋</button>
       </div>
       <div class="rp-body" id="rp-body">
         <div class="no-sel"><i class="ti ti-user-search"></i>ベッドを選択するか<br>患者を割り当ててください</div>
@@ -210,6 +179,17 @@
   </div>
 </div>
 
+<!-- ステージブリーフィングモーダル -->
+<div class="story-screen" id="story-screen">
+  <div class="story-card">
+    <div class="story-stage-lbl" id="story-stage-lbl"></div>
+    <div class="story-title" id="story-title"></div>
+    <div class="story-body" id="story-body"></div>
+    <div class="story-speaker" id="story-speaker"></div>
+    <button class="story-start-btn" id="story-start-btn">🏥 シフト開始</button>
+  </div>
+</div>
+
 <!-- 入電モーダル -->
 <div class="call-overlay" id="call-overlay">
   <div class="call-modal">
@@ -240,6 +220,19 @@
   </div>
 </div>
 
+<!-- キーオーダー一覧モーダル -->
+<div class="key-order-modal-bg" id="key-order-modal-bg" onclick="closeKeyOrderModal()">
+  <div class="key-order-modal" onclick="event.stopPropagation()">
+    <div class="key-order-hdr">
+      <span>転帰解放に必要な検査</span>
+      <button type="button" class="key-order-close" onclick="closeKeyOrderModal()">✕</button>
+    </div>
+    <div class="key-order-body">
+      <div class="key-order-table" id="key-order-table"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Disposition確認モーダル -->
 <div class="disp-modal-bg" id="disp-modal-bg">
   <div class="disp-modal">
@@ -255,5 +248,13 @@
 <div class="ghost-card" id="ghost"></div>
 
 <script type="module" src="src/main.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .catch(err => console.warn('SW registration failed:', err));
+    });
+  }
+</script>
 </body>
 </html>

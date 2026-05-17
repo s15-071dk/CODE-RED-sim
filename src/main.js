@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { STAFF_DEFS, STAFF_SPEECH, fatigueState } from './data/staff.js';
-import { setupTutorial, setupStage1, setupStage2, setupStage3, setupStage4 } from './data/stages.js';
+import { STAGES_META, setupTutorial, setupStage1, setupStage2, setupStage3, setupStage4, setupStage5, setupStageReverse, setupStageEndless } from './data/stages.js';
+import { STAGE4_POOL, STAGE5_POOL } from './data/patients.js';
 import { renderBeds, renderWaitList, renderDetail, renderStaffList } from './ui/render.js';
 import { showToast, showAlert, logMsg, renderLog } from './ui/notifications.js';
 import { getUrgencyColor, changeSat, calcGrade, triggerGameOver, triggerClear } from './systems/scoring.js';
@@ -20,7 +21,52 @@ function setDifficulty(d) {
   state.difficulty = d;
   document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.diff-btn.' + d).classList.add('active');
+  showStageSelect();
 }
+
+// ===== ステージ選択 =====
+function getClearedStages() {
+  try { return JSON.parse(localStorage.getItem('clearedStages') || '["tutorial"]'); }
+  catch { return ["tutorial"]; }
+}
+
+export function markStageCleared(stageId) {
+  const cleared = getClearedStages();
+  if (!cleared.includes(stageId)) {
+    cleared.push(stageId);
+    localStorage.setItem('clearedStages', JSON.stringify(cleared));
+  }
+}
+
+function showStageSelect() {
+  const cleared = getClearedStages();
+  const list = document.getElementById('stage-list');
+  list.innerHTML = '';
+  STAGES_META.forEach(stage => {
+    const unlocked = !stage.unlockAfter || cleared.includes(stage.unlockAfter);
+    const item = document.createElement('div');
+    item.className = 'stage-item' + (unlocked ? '' : ' locked');
+    item.innerHTML = `
+      <i class="ti ${stage.icon} stage-item-icon"></i>
+      <div class="stage-item-body">
+        <div class="stage-item-title">${stage.title}</div>
+        <div class="stage-item-subtitle">${stage.subtitle}</div>
+      </div>
+      ${unlocked ? '' : '<i class="ti ti-lock stage-item-lock"></i>'}
+    `;
+    if (unlocked) {
+      item.onclick = () => {
+        document.getElementById('stage-select-screen').style.display = 'none';
+        showStoryScreen(stage.id);
+      };
+    }
+    list.appendChild(item);
+  });
+  document.getElementById('stage-select-screen').style.display = 'flex';
+}
+
+window.showStageSelect = showStageSelect;
+window.markStageCleared = markStageCleared;
 
 // ===== ゲームリセット =====
 export function resetGame() {
@@ -61,6 +107,8 @@ export function resetGame() {
   state.shiftDuration    = 240;
   state.activeEvent      = null;
   state.stage4EventFired = false;
+  state.stage5EventCount = 0;
+  state.endlessCount     = 0;
   state.lastFeedback     = null;
   state.eventLog = [];
   const lb = document.getElementById('log-body');
@@ -88,6 +136,12 @@ export function startStage(stageName) {
     state.shiftDuration = 180;
     document.getElementById("shift-time").textContent = "3:00";
     setupStage4();
+  } else if (stageName === "stage5") {
+    setupStage5();
+  } else if (stageName === "stageR") {
+    setupStageReverse();
+  } else if (stageName === "stageE") {
+    setupStageEndless();
   }
 
   renderBeds();
@@ -95,6 +149,79 @@ export function startStage(stageName) {
   renderDetail();
   state.mainLoop = setInterval(gameLoop, 2000);
   if (state.callEnabled) setTimeout(triggerCall, 6000);
+}
+
+// ===== ブリーフィング画面 =====
+const STAGE_STORIES = {
+  tutorial: {
+    label: "チュートリアル",
+    title: "救急外来へようこそ",
+    body: "本日から救急外来を担当していただきます。\nまずは基本的な患者対応の流れを覚えてもらいましょう。\n\n患者カードをクリックしてベッドへ割り当て、検査をオーダーし、転帰を決定してください。",
+    speaker: "チーフ看護師・青木 沙耶",
+  },
+  stage1: {
+    label: "Stage 1",
+    title: "初日のシフト",
+    body: "今日はあなたの救急外来デビュー日。\n軽症の患者が中心で、比較的穏やかなシフトになるはずです。\n\n基本の流れをしっかり確認しながら、一人ひとりに丁寧に対応しましょう。",
+    speaker: "チーフ看護師・青木 沙耶",
+  },
+  stage2: {
+    label: "Stage 2",
+    title: "入電が入り始めた",
+    body: "2週目のシフト。今夜は救急車からの入電が来る。\n重症患者の対応もあり、判断を誤ると患者満足度が一気に落ちる。\n\n入電は承諾するか慎重に判断し、重症患者を優先すること。",
+    speaker: "研修医・松本 拓海",
+  },
+  stage3: {
+    label: "Stage 3",
+    title: "スタッフの限界",
+    body: "先輩医師が急病で抜けた。\nスタッフに過度な負担をかけると疲労が蓄積し、インシデントが起きる。\n\n疲れたスタッフを適切に休ませながら回すことが、このシフトの鍵だ。",
+    speaker: "チーフ看護師・青木 沙耶",
+  },
+  stage4: {
+    label: "Stage 4",
+    title: "ナイトシフト",
+    body: "深夜のシフトに急遽呼ばれた。\n3分間のタイムリミット。さらに今夜は何かが起きる予感がする。\n\n想定外の事態にも冷静に対応できるか。",
+    speaker: "当直調整・中川 遥",
+  },
+  stage5: {
+    label: "Stage 5",
+    title: "午前2時、あなただけが残っている",
+    body: "午前2時。スタッフは2名だけ。8床がフル稼働している。\n今夜は2度、想定外の事態が訪れる。\n\n一人で判断し、一人で動かなければならない。",
+    speaker: "— システムログ 02:00:00 —",
+  },
+  stageR: {
+    label: "チャレンジ — 逆転の引き継ぎ",
+    title: "「先生、助けてください！」",
+    body: "担当医が急病で倒れました。\n引き継ぎを頼まれたとき、すでに患者が溢れ、満足度は崩壊寸前です。\n\nここから立て直せるか。あなたの腕が問われます。",
+    speaker: "研修医・小野 結衣（声が震えている）",
+  },
+  stageE: {
+    label: "チャレンジ — エンドレスシフト",
+    title: "終わりのないシフトが始まる",
+    body: "患者は止まらない。スコアを稼げ。\n時間が経つほど重症患者の割合が増えていく。\n\n満足度がゼロになるまで、どれだけ耐えられるか。",
+    speaker: "— ハイスコアアタックモード —",
+  },
+};
+
+function showStoryScreen(stageName) {
+  const s = STAGE_STORIES[stageName];
+  if (!s) { startStage(stageName); return; }
+
+  document.getElementById("story-stage-lbl").textContent = s.label;
+  document.getElementById("story-title").textContent     = s.title;
+  document.getElementById("story-body").textContent      = s.body;
+  document.getElementById("story-speaker").textContent   = s.speaker;
+
+  const card = document.querySelector(".story-card");
+  if (card) card.dataset.stage = stageName;
+
+  const btn = document.getElementById("story-start-btn");
+  btn.onclick = () => {
+    document.getElementById("story-screen").classList.remove("show");
+    startStage(stageName);
+  };
+
+  document.getElementById("story-screen").classList.add("show");
 }
 
 export function tryStage(stageName) {
@@ -114,7 +241,19 @@ export function tryStage(stageName) {
     showToast("先にステージ3をクリアしてください", "warn");
     return;
   }
-  startStage(stageName);
+  if (stageName === "stage5" && !state.progress.s4Done) {
+    showToast("先にステージ4をクリアしてください", "warn");
+    return;
+  }
+  if (stageName === "stageR" && !state.progress.tutDone) {
+    showToast("先にチュートリアルをクリアしてください", "warn");
+    return;
+  }
+  if (stageName === "stageE" && !state.progress.tutDone) {
+    showToast("先にチュートリアルをクリアしてください", "warn");
+    return;
+  }
+  showStoryScreen(stageName);
 }
 
 export function backToTitle() {
@@ -130,41 +269,8 @@ export function backToTitle() {
 
 export function updateUnlocks() {
   saveProgress();
-  if (state.progress.tutDone) {
-    document.getElementById("card-s1").classList.remove("locked");
-    document.getElementById("right-s1").innerHTML = `<div style="font-size:20px;font-weight:800;color:#60a5fa;">→</div>`;
-    document.getElementById("grade-tut").textContent = "✓";
-  }
-  if (state.progress.s1Done) {
-    const cs2 = document.getElementById("card-s2");
-    const rs2 = document.getElementById("right-s2");
-    const gs1 = document.getElementById("grade-s1");
-    if (cs2) cs2.classList.remove("locked");
-    if (rs2) rs2.innerHTML = `<div style="font-size:20px;font-weight:800;color:#f97316;">→</div>`;
-    if (gs1) gs1.textContent = state.progress.s1Grade;
-  }
-  if (state.progress.s3Done) {
-    const cs4 = document.getElementById("card-s4");
-    const rs4 = document.getElementById("right-s4");
-    const gs3 = document.getElementById("grade-s3");
-    if (cs4) cs4.classList.remove("locked");
-    if (rs4) rs4.innerHTML = `<div style="font-size:20px;font-weight:800;color:#a855f7;">→</div>`;
-    if (gs3) gs3.textContent = state.progress.s3Grade;
-    const tn = document.getElementById("title-note");
-    if (tn) tn.textContent = "ステージ3クリア！ステージ4が解放されました";
-  } else if (state.progress.s2Done) {
-    const cs3 = document.getElementById("card-s3");
-    const rs3 = document.getElementById("right-s3");
-    const gs2 = document.getElementById("grade-s2");
-    if (cs3) cs3.classList.remove("locked");
-    if (rs3) rs3.innerHTML = `<div style="font-size:20px;font-weight:800;color:#ef4444;">→</div>`;
-    if (gs2) gs2.textContent = state.progress.s2Grade;
-    const tn = document.getElementById("title-note");
-    if (tn) tn.textContent = "ステージ2クリア！ステージ3が解放されました";
-  } else if (state.progress.s1Done) {
-    const tn = document.getElementById("title-note");
-    if (tn) tn.textContent = "ステージ1クリア！ステージ2が解放されました";
-  }
+  // ステージ解放はSTAGES_META + markStageCleared() + showStageSelect() で管理するため、
+  // 旧HTMLカード操作は廃止
 }
 
 export function togglePause() {
@@ -218,6 +324,36 @@ function triggerStage4Event() {
     logMsg('system', '⚠ イベント発生：多重入電（2台同時）');
     triggerCall();
     setTimeout(() => triggerCall(), 3000);
+  }
+}
+
+// ===== Stage5 夜間イベント（2回発火）=====
+function triggerStage5Events() {
+  if (state.stage5EventCount === 0 && state.shiftElapsed >= 90) {
+    state.stage5EventCount = 1;
+    const eventType = pickRandom(['ct_broken', 'mass_casualty']);
+    if (eventType === 'ct_broken') {
+      state.activeEvent = { type: 'ct_broken', until: state.shiftElapsed + 30 };
+      showToast('⚠ CT装置が故障！30秒間使用不可', 'err');
+      logMsg('system', '⚠ 夜間イベント①：CT装置故障（30秒間）');
+    } else {
+      state.activeEvent = { type: 'mass_casualty' };
+      showToast('🚑 多重事故！搬送要請が2件同時に来ています', 'err');
+      logMsg('system', '⚠ 夜間イベント①：多重入電（2台同時）');
+      triggerCall();
+      setTimeout(() => triggerCall(), 3000);
+    }
+  }
+  if (state.stage5EventCount === 1 && state.shiftElapsed >= 180) {
+    state.stage5EventCount = 2;
+    const available = state.staffState.filter(s => !s.absent && !s.onBreak);
+    if (available.length > 0) {
+      const target = pickRandom(available);
+      target.absent = true;
+      showToast(`⚠ ${target.short}が急病で離脱！`, 'err');
+      logMsg('system', `⚠ 夜間イベント②：${target.short}（${target.roleLabel}）が急病のため離脱`);
+      renderStaffList();
+    }
   }
 }
 
@@ -337,6 +473,59 @@ export function gameLoop() {
       triggerClear("ステージ4 クリア！", "最難関ステージを制覇しました！");
     }
   }
+  if (state.currentStage === "stageE") {
+    // 難易度フェーズ（90秒ごとに赤患者の割合が増える）
+    const phase = Math.min(3, Math.floor(state.shiftElapsed / 90));
+    const PHASE_WEIGHTS = [
+      { red: 0, orange: 3, green: 5 },   // フェーズ0: 緑多め
+      { red: 2, orange: 4, green: 2 },   // フェーズ1: 混合
+      { red: 4, orange: 3, green: 1 },   // フェーズ2: 赤増加
+      { red: 6, orange: 2, green: 1 },   // フェーズ3: 赤支配
+    ];
+    const pool = [...STAGE4_POOL, ...STAGE5_POOL];
+
+    // 20秒ごと・待機が2名未満なら患者を補充
+    if (state.shiftElapsed % 20 === 0 && state.waitPatients.length < 2) {
+      const w = PHASE_WEIGHTS[phase];
+      const weighted = [
+        ...pool.filter(p => p.color === 'red').flatMap(p => Array(w.red).fill(p)),
+        ...pool.filter(p => p.color === 'orange').flatMap(p => Array(w.orange).fill(p)),
+        ...pool.filter(p => p.color === 'green').flatMap(p => Array(w.green).fill(p)),
+      ];
+      if (weighted.length > 0) {
+        const base = pickRandom(weighted);
+        state.endlessCount++;
+        const np = { ...base, id: 'se-' + state.endlessCount, orders: [], signals: {}, urgency: 100, ivOrdered: false, disposed: false };
+        state.waitPatients.push(np);
+        renderWaitList();
+        if (phase >= 2) logMsg('nurse', `青木「次の患者さんが来ています（フェーズ${phase + 1}）」`);
+      }
+    }
+  }
+  if (state.currentStage === "stageR") {
+    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0;
+    if (allDone) {
+      state.progress.sRDone  = true;
+      state.progress.sRGrade = calcGrade().g;
+      updateUnlocks();
+      triggerClear("逆転シフト クリア！", "崩壊した現場を立て直しました");
+    }
+  }
+  if (state.currentStage === "stage5") {
+    triggerStage5Events();
+    if (state.activeEvent?.type === 'ct_broken' && state.shiftElapsed >= state.activeEvent.until) {
+      state.activeEvent = null;
+      showToast('CT装置が復旧しました');
+      logMsg('system', '✅ CT装置が復旧しました');
+    }
+    const allDone = state.beds.every(b => !b.patient || b.patient.disposed) && state.waitPatients.length === 0;
+    if (allDone) {
+      state.progress.s5Done  = true;
+      state.progress.s5Grade = calcGrade().g;
+      updateUnlocks();
+      triggerClear("ステージ5 クリア！", "過酷な夜間単独シフトを乗り切りました！");
+    }
+  }
 
   renderBeds();
   if (state.selectedBedId) renderDetail();
@@ -363,7 +552,7 @@ updateUnlocks();
 // ===== window への公開 =====
 // 開発用：コンソールから window.unlockAll() でステージを全解放できる
 window.unlockAll = () => {
-  Object.assign(state.progress, { tutDone: true, s1Done: true, s1Grade: 'A', s2Done: true, s2Grade: 'A', s3Done: true, s3Grade: 'A', s4Done: false, s4Grade: '--' });
+  Object.assign(state.progress, { tutDone: true, s1Done: true, s1Grade: 'A', s2Done: true, s2Grade: 'A', s3Done: true, s3Grade: 'A', s4Done: true, s4Grade: 'A', s5Done: false, s5Grade: '--' });
   saveProgress();
   updateUnlocks();
   console.info('[DEV] All stages unlocked');
@@ -378,6 +567,7 @@ window.resetProgress = () => {
 Object.assign(window, {
   startStage,
   tryStage,
+  showStoryScreen,
   backToTitle,
   togglePause,
   togglePanel,
